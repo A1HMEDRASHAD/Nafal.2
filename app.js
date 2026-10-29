@@ -3,7 +3,7 @@ import {
   initializeFirestore, getFirestore, collection, doc, addDoc, updateDoc, onSnapshot 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// 1. إعدادات الاتصال بقاعدة بيانات فايربيس
+// 1. تهيئة الاتصال السريع والطبيعي بقاعدة البيانات
 const firebaseConfig = {
   apiKey: "AIzaSyAtCSiIDDN9nceKMj2xZbjREy9qXFEv68k",
   authDomain: "rawi-ye02.firebaseapp.com",
@@ -19,7 +19,6 @@ let db;
 if (getApps().length === 0) {
   app = initializeApp(firebaseConfig);
   db = initializeFirestore(app, {
-    experimentalForceLongPolling: true,
     ignoreUndefinedProperties: true
   });
 } else {
@@ -29,6 +28,17 @@ if (getApps().length === 0) {
 
 const DEFAULT_COFFEE_IMG = "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=800&q=80";
 const DEFAULT_FAVICON = "https://cdn-icons-png.flaticon.com/512/924/924514.png";
+
+// حماية أمنية لتنظيف النصوص ومنع ثغرات حقن الأكواد (XSS)
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 // متغيرات المنصة والبيانات الحية
 let marketConfig = {
@@ -56,12 +66,27 @@ let activeProductId = null;
 let activeProductQty = 1;
 let selectedRatingStars = 5;
 
-// نظام "سلتي وطلباتي" (سلة مستقلة لكل متجر + فواتير الزبون + بيانات الزبون المحفوظة)
-let multiCarts = JSON.parse(localStorage.getItem("nafal_multi_carts") || "{}");
-let activeCheckoutStoreId = null;
-let savedInvoices = JSON.parse(localStorage.getItem("nafal_my_invoices") || "[]");
-let savedCustomerProfile = JSON.parse(localStorage.getItem("nafal_customer_profile") || "{}");
+// التخزين المحلي للسلات، الفواتير، الملف الشخصي، واهتمامات العميل للخوارزمية
+function safeLoadJson(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
+let multiCarts = safeLoadJson("nafal_multi_carts", {});
+let activeCheckoutStoreId = null;
+let savedInvoices = safeLoadJson("nafal_my_invoices", []);
+let savedCustomerProfile = safeLoadJson("nafal_customer_profile", {});
+let userInterests = safeLoadJson("nafal_user_interests", {
+  categories: {},
+  stores: {},
+  viewedProducts: []
+});
+
+// إشعار عائم سريع
 let toastTimer = null;
 function showToast(msg) {
   const toast = document.getElementById("toast");
@@ -70,10 +95,124 @@ function showToast(msg) {
   toastText.textContent = msg;
   toast.classList.remove("hidden");
   if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.add("hidden"), 2800);
+  toastTimer = setTimeout(() => toast.classList.add("hidden"), 2600);
 }
 
-// 2. تحديث أيقونة قوقل (Favicon) وصور المشاركة في واتساب وتويتر (OpenGraph) وبيانات SEO
+// ============================================================================
+// 2. خوارزمية التعلم والاقتراحات الذكية (Smart Recommendation Engine)
+// ============================================================================
+function recordUserInterest({ storeId = null, category = null, productId = null, weight = 1 }) {
+  if (!userInterests || typeof userInterests !== "object") {
+    userInterests = { categories: {}, stores: {}, viewedProducts: [] };
+  }
+  if (storeId) {
+    userInterests.stores[storeId] = (userInterests.stores[storeId] || 0) + weight;
+  }
+  if (category) {
+    userInterests.categories[category] = (userInterests.categories[category] || 0) + weight;
+  }
+  if (productId) {
+    userInterests.viewedProducts = [
+      productId,
+      ...(userInterests.viewedProducts || []).filter(id => id !== productId)
+    ].slice(0, 20);
+  }
+  try {
+    localStorage.setItem("nafal_user_interests", JSON.stringify(userInterests));
+  } catch {}
+}
+
+function renderSmartRecommendations() {
+  const recSection = document.getElementById("recommendationsSection");
+  const recStoresRow = document.getElementById("recommendedStoresRow");
+  const recProdsGrid = document.getElementById("recommendedProductsGrid");
+  const recTitle = document.getElementById("recSectionTitle");
+  const recSubtitle = document.getElementById("recSectionSubtitle");
+
+  if (!recSection || !recStoresRow || !recProdsGrid) return;
+
+  const activeStoresList = allStores.filter(s => !isStoreUnderMaintenance(s));
+  const availableProds = allProducts.filter(p => {
+    if (Number(p.stock) <= 0) return false;
+    const st = allStores.find(s => s.id === p.storeId);
+    return !st || !isStoreUnderMaintenance(st);
+  });
+
+  if (availableProds.length === 0) {
+    recSection.classList.add("hidden");
+    return;
+  }
+
+  const hasHistory =
+    Object.keys(userInterests.categories || {}).length > 0 ||
+    Object.keys(userInterests.stores || {}).length > 0 ||
+    (userInterests.viewedProducts || []).length > 0;
+
+  if (hasHistory) {
+    recTitle.textContent = "اخترنا لك على ذوقك";
+    recSubtitle.textContent = "منتجات ومحلات مقترحة بناءً على تصفحك واهتماماتك";
+  } else {
+    recTitle.textContent = "مختارات سوق نفال المميزة";
+    recSubtitle.textContent = "أفضل البكجات والمنتجات الأعلى تقييماً في شرورة";
+  }
+
+  // حساب نقاط التوافق للمحلات (Store Affinity Score)
+  const scoredStores = activeStoresList.map(st => {
+    let score = (userInterests.stores && userInterests.stores[st.id]) ? userInterests.stores[st.id] * 3 : 0;
+    if (userInterests.categories && userInterests.categories[st.marketCategory]) {
+      score += userInterests.categories[st.marketCategory] * 2;
+    }
+    const avgRating = st.ratingCount ? (Number(st.ratingSum || 5) / Number(st.ratingCount || 1)) : 5;
+    score += avgRating;
+    return { store: st, score };
+  }).sort((a, b) => b.score - a.score).slice(0, 5);
+
+  recStoresRow.innerHTML = "";
+  if (scoredStores.length > 0 && marketConfig.showMarketplace !== false) {
+    recStoresRow.classList.remove("hidden");
+    scoredStores.forEach(({ store }) => {
+      const pill = document.createElement("div");
+      pill.className = "rec-store-pill";
+      pill.innerHTML = `
+        ${store.logo ? `<img src="${escapeHtml(store.logo)}" alt="${escapeHtml(store.name)}">` : `<i class="ri-store-2-fill" style="color:var(--caramel); font-size:1.2rem;"></i>`}
+        <span>${escapeHtml(store.name)}</span>
+        <small class="rating-chip">${getStoreRatingText(store)}</small>
+      `;
+      pill.addEventListener("click", () => openSingleStore(store.id, true));
+      recStoresRow.appendChild(pill);
+    });
+  } else {
+    recStoresRow.classList.add("hidden");
+  }
+
+  // حساب نقاط التوافق للمنتجات (Product Affinity Score)
+  const scoredProducts = availableProds.map(prod => {
+    let score = 0;
+    if (userInterests.categories && userInterests.categories[prod.category]) {
+      score += userInterests.categories[prod.category] * 4;
+    }
+    if (userInterests.stores && userInterests.stores[prod.storeId]) {
+      score += userInterests.stores[prod.storeId] * 3;
+    }
+    if ((userInterests.viewedProducts || []).includes(prod.id)) {
+      score += 5;
+    }
+    if (prod.productType === "bundle") score += 2.5;
+    if (prod.freeDelivery) score += 1.5;
+    return { prod, score };
+  }).sort((a, b) => b.score - a.score || (b.prod.createdAt || 0) - (a.prod.createdAt || 0)).slice(0, 4);
+
+  recProdsGrid.innerHTML = "";
+  scoredProducts.forEach(({ prod }) => {
+    recProdsGrid.appendChild(createProductCardElement(prod, true));
+  });
+
+  recSection.classList.remove("hidden");
+}
+
+// ============================================================================
+// 3. تحديث أيقونة قوقل (Favicon) وصور المشاركة في واتساب وتويتر (SEO & OG)
+// ============================================================================
 function updateSeoAndShareMeta({ title, description, image = "", type = "WebSite", price = null, storeName = "" }) {
   const finalTitle = title || `${marketConfig.platformName} — شرورة`;
   const finalDesc = description || marketConfig.platformSlogan;
@@ -140,7 +279,9 @@ function updateSeoAndShareMeta({ title, description, image = "", type = "WebSite
   schemaEl.textContent = JSON.stringify(schemaObj);
 }
 
-// 3. فحص حالة المتجر (الصيانة / الاشتراك / ساعات الدوام)
+// ============================================================================
+// 4. فحص حالة المتجر (الصيانة / الاشتراك / ساعات الدوام)
+// ============================================================================
 function isStoreUnderMaintenance(store) {
   if (!store) return false;
   if (store.storeStatus === "maintenance") return true;
@@ -235,7 +376,19 @@ function getProductImages(prod) {
   return list;
 }
 
-// 4. الاستماع المباشر للبيانات من فايربيس
+// ============================================================================
+// 5. الاستماع المباشر للبيانات مع جدولة الرسم السريع (Anti-Lag Batching)
+// ============================================================================
+let renderScheduled = false;
+function scheduleRefreshUI() {
+  if (renderScheduled) return;
+  renderScheduled = true;
+  requestAnimationFrame(() => {
+    renderScheduled = false;
+    refreshAllUI();
+  });
+}
+
 function initRealtimeListeners() {
   onSnapshot(doc(db, "nafal_platform", "marketConfig"), snap => {
     if (snap.exists()) {
@@ -248,14 +401,14 @@ function initRealtimeListeners() {
     allStores = [];
     snap.forEach(d => allStores.push({ id: d.id, ...d.data() }));
     allStores.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    refreshAllUI();
+    scheduleRefreshUI();
   });
 
   onSnapshot(collection(db, "nafal_products"), snap => {
     allProducts = [];
     snap.forEach(d => allProducts.push({ id: d.id, ...d.data() }));
     allProducts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    refreshAllUI();
+    scheduleRefreshUI();
   });
 }
 
@@ -295,7 +448,9 @@ function applyPlatformSettings() {
   }
 }
 
-// 5. نظام التنقل السلس بين الصفحات الكاملة (SPA Navigation)
+// ============================================================================
+// 6. نظام التنقل السلس بين الصفحات الكاملة (SPA Navigation)
+// ============================================================================
 function switchSpaView(viewName, pushUrl = null) {
   currentViewName = viewName;
 
@@ -317,6 +472,7 @@ function switchSpaView(viewName, pushUrl = null) {
     activeProductId = null;
     activeCheckoutStoreId = null;
     document.getElementById("marketplaceView").classList.remove("hidden");
+    renderSmartRecommendations();
     updateSeoAndShareMeta({
       title: `${marketConfig.platformName} — شرورة`,
       description: marketConfig.platformSlogan,
@@ -326,7 +482,7 @@ function switchSpaView(viewName, pushUrl = null) {
   } else if (viewName === "search") {
     document.getElementById("searchView").classList.remove("hidden");
     renderSearchPageResults();
-    setTimeout(() => document.getElementById("globalSearchInput").focus(), 100);
+    setTimeout(() => document.getElementById("globalSearchInput").focus(), 80);
   } else if (viewName === "hub") {
     document.getElementById("ordersAndCartsView").classList.remove("hidden");
     if (activeCheckoutStoreId && multiCarts[activeCheckoutStoreId]) {
@@ -390,6 +546,7 @@ document.getElementById("dockSearchBtn").addEventListener("click", () => switchS
 document.getElementById("dockHubBtn").addEventListener("click", () => switchSpaView("hub", "?view=hub"));
 
 function refreshAllUI() {
+  renderSmartRecommendations();
   renderMarketplaceStores();
   renderMarketplaceProducts();
 
@@ -414,7 +571,9 @@ function refreshAllUI() {
   updateMultiCartsBadges();
 }
 
-// 6. عرض المتاجر والمنتجات في الصفحة الرئيسية
+// ============================================================================
+// 7. عرض المتاجر والمنتجات في الصفحة الرئيسية
+// ============================================================================
 function renderMarketCategoryPills() {
   const bar = document.getElementById("marketCategoriesBar");
   bar.innerHTML = `
@@ -428,13 +587,16 @@ function renderMarketCategoryPills() {
     btn.type = "button";
     btn.className = `cat-pill ${selectedMarketCat === cat ? "active" : ""}`;
     btn.dataset.mcat = cat;
-    btn.innerHTML = `<i class="ri-store-2-line"></i><span>${cat}</span>`;
+    btn.innerHTML = `<i class="ri-store-2-line"></i><span>${escapeHtml(cat)}</span>`;
     bar.appendChild(btn);
   });
 
   bar.querySelectorAll(".cat-pill").forEach(btn => {
     btn.addEventListener("click", () => {
       selectedMarketCat = btn.dataset.mcat;
+      if (selectedMarketCat !== "all") {
+        recordUserInterest({ category: selectedMarketCat, weight: 1 });
+      }
       renderMarketCategoryPills();
       renderMarketplaceStores();
     });
@@ -450,19 +612,19 @@ function createStoreCardElement(st) {
   card.innerHTML = `
     <div class="store-card-head">
       <div class="store-card-logo">
-        ${st.logo ? `<img src="${st.logo}" alt="${st.name}" loading="lazy">` : `<i class="ri-store-2-line"></i>`}
+        ${st.logo ? `<img src="${escapeHtml(st.logo)}" alt="${escapeHtml(st.name)}" loading="lazy">` : `<i class="ri-store-2-line"></i>`}
       </div>
       <div class="store-card-info">
         <div class="store-card-title-row">
-          <h3 class="store-card-title">${st.name}</h3>
+          <h3 class="store-card-title">${escapeHtml(st.name)}</h3>
           <span class="rating-chip">${getStoreRatingText(st)}</span>
         </div>
-        <p class="store-card-desc">${st.description || st.marketCategory || "متجر محلي في شرورة"}</p>
+        <p class="store-card-desc">${escapeHtml(st.description || st.marketCategory || "متجر محلي في شرورة")}</p>
       </div>
     </div>
 
     <div class="store-card-footer">
-      <span><i class="ri-shopping-bag-3-line"></i> ${prodCount} منتج | التوصيل: ${st.baseDeliveryFee ?? 15} ريال</span>
+      <span><i class="ri-shopping-bag-3-line"></i> ${prodCount} منتج | التوصيل: ${Number(st.baseDeliveryFee ?? 15)} ريال</span>
       <span class="work-status-chip ${workState.badgeClass}">${workState.badgeText}</span>
     </div>
   `;
@@ -500,20 +662,20 @@ function createProductCardElement(prod, showStoreName = true) {
   card.className = "product-card";
   card.innerHTML = `
     <div class="product-img-wrap">
-      <img src="${images[0]}" alt="${prod.name}" loading="lazy">
+      <img src="${escapeHtml(images[0])}" alt="${escapeHtml(prod.name)}" loading="lazy">
       ${prod.productType === "bundle" ? `<span class="badge-bundle">🔥 بكج توفير</span>` : ""}
       ${prod.freeDelivery ? `<span class="badge-free-delivery"><i class="ri-truck-line"></i> توصيل مجاني</span>` : ""}
-      <span class="badge-category">${prod.category || "عام"}</span>
+      <span class="badge-category">${escapeHtml(prod.category || "عام")}</span>
       ${images.length > 1 ? `<span class="multi-img-indicator"><i class="ri-image-2-line"></i> ${images.length}</span>` : ""}
     </div>
     <div class="product-info">
-      ${showStoreName ? `<div class="prod-store-mini"><i class="ri-store-2-line"></i><span>${storeName}</span></div>` : ""}
-      <h3 class="product-title">${prod.name}</h3>
-      <p class="product-desc">${prod.description || "اضغط لعرض التفاصيل الكاملة"}</p>
+      ${showStoreName ? `<div class="prod-store-mini"><i class="ri-store-2-line"></i><span>${escapeHtml(storeName)}</span></div>` : ""}
+      <h3 class="product-title">${escapeHtml(prod.name)}</h3>
+      <p class="product-desc">${escapeHtml(prod.description || "اضغط لعرض التفاصيل الكاملة")}</p>
       <div class="product-footer">
         <span class="product-price">
-          ${prod.price} <small>ريال</small>
-          ${prod.oldPrice && Number(prod.oldPrice) > Number(prod.price) ? `<del>${prod.oldPrice}</del>` : ""}
+          ${Number(prod.price)} <small>ريال</small>
+          ${prod.oldPrice && Number(prod.oldPrice) > Number(prod.price) ? `<del>${Number(prod.oldPrice)}</del>` : ""}
         </span>
         <button type="button" class="btn-add" ${outOfStock ? "disabled" : ""}>
           <i class="${outOfStock ? 'ri-forbid-2-line' : 'ri-add-line'}"></i>
@@ -570,7 +732,9 @@ document.querySelectorAll(".quick-type-filter .mini-filter-btn").forEach(btn => 
   });
 });
 
-// 7. صفحة البحث المستقلة
+// ============================================================================
+// 8. صفحة البحث المستقلة
+// ============================================================================
 document.getElementById("globalSearchInput").addEventListener("input", (e) => {
   searchQueryText = e.target.value;
   document.getElementById("clearSearchBtn").classList.toggle("hidden", searchQueryText.trim() === "");
@@ -622,7 +786,9 @@ function renderSearchPageResults() {
   }
 }
 
-// 8. صفحة المتجر الفردي (Single Store View)
+// ============================================================================
+// 9. صفحة المتجر الفردي (Single Store View)
+// ============================================================================
 function openSingleStore(storeId, pushHistory = true) {
   activeStoreId = storeId;
   activeProductId = null;
@@ -631,7 +797,10 @@ function openSingleStore(storeId, pushHistory = true) {
   switchSpaView("store", pushHistory ? `?store=${storeId}` : null);
 
   const st = allStores.find(s => s.id === storeId);
-  if (st) populateSingleStoreUI(st);
+  if (st) {
+    recordUserInterest({ storeId: st.id, category: st.marketCategory, weight: 2 });
+    populateSingleStoreUI(st);
+  }
 }
 
 function populateSingleStoreUI(st) {
@@ -645,9 +814,9 @@ function populateSingleStoreUI(st) {
   workBadge.textContent = workState.badgeText;
   workBadge.className = `work-status-chip ${workState.badgeClass}`;
 
-  document.getElementById("stViewHoursText").innerHTML = `<i class="ri-time-line"></i> ${workState.hoursLabel}`;
-  document.getElementById("stViewMinOrderText").innerHTML = `<i class="ri-shopping-basket-line"></i> ${st.minOrderAmount ? `الحد الأدنى: ${st.minOrderAmount} ريال` : "بدون حد أدنى"}`;
-  document.getElementById("stViewDeliveryText").innerHTML = `<i class="ri-e-bike-2-line"></i> التوصيل: ${st.baseDeliveryFee ?? 15} ريال`;
+  document.getElementById("stViewHoursText").innerHTML = `<i class="ri-time-line"></i> ${escapeHtml(workState.hoursLabel)}`;
+  document.getElementById("stViewMinOrderText").innerHTML = `<i class="ri-shopping-basket-line"></i> ${st.minOrderAmount ? `الحد الأدنى: ${Number(st.minOrderAmount)} ريال` : "بدون حد أدنى"}`;
+  document.getElementById("stViewDeliveryText").innerHTML = `<i class="ri-e-bike-2-line"></i> التوصيل: ${Number(st.baseDeliveryFee ?? 15)} ريال`;
 
   const logoImg = document.getElementById("stViewLogoImg");
   const logoIcon = document.getElementById("stViewLogoIcon");
@@ -716,7 +885,7 @@ function renderSingleStoreCategories(st) {
     btn.type = "button";
     btn.className = `cat-pill ${activeStoreInternalCat === cat ? "active" : ""}`;
     btn.dataset.scat = cat;
-    btn.innerHTML = `<i class="ri-price-tag-3-line"></i><span>${cat}</span>`;
+    btn.innerHTML = `<i class="ri-price-tag-3-line"></i><span>${escapeHtml(cat)}</span>`;
     bar.appendChild(btn);
   });
 
@@ -794,7 +963,7 @@ document.querySelectorAll("#starsSelector button").forEach(btn => {
 
 document.getElementById("submitRatingBtn").addEventListener("click", async () => {
   if (!activeStoreId) return;
-  const ratedList = JSON.parse(localStorage.getItem("nafal_rated_stores") || "[]");
+  const ratedList = safeLoadJson("nafal_rated_stores", []);
   if (ratedList.includes(activeStoreId)) {
     showToast("يعطيك العافية، سبق وقيّمت هذا المحل!");
     document.getElementById("ratingModal").classList.add("hidden");
@@ -815,7 +984,9 @@ document.getElementById("submitRatingBtn").addEventListener("click", async () =>
   showToast("شكراً لك! تم تسجيل تقييمك للمحل ★");
 });
 
-// 9. صفحة المنتج المستقلة (Single Product Page View)
+// ============================================================================
+// 10. صفحة المنتج المستقلة (Single Product Page View)
+// ============================================================================
 function openProductPage(productId, pushHistory = true) {
   activeProductId = productId;
   activeProductQty = 1;
@@ -823,7 +994,10 @@ function openProductPage(productId, pushHistory = true) {
   switchSpaView("product", pushHistory ? `?product=${productId}` : null);
 
   const prod = allProducts.find(p => p.id === productId);
-  if (prod) populateProductPageUI(prod);
+  if (prod) {
+    recordUserInterest({ storeId: prod.storeId, category: prod.category, productId: prod.id, weight: 3 });
+    populateProductPageUI(prod);
+  }
 }
 
 function populateProductPageUI(prod) {
@@ -857,7 +1031,7 @@ function populateProductPageUI(prod) {
     stockEl.innerHTML = `<i class="ri-close-circle-fill"></i> نفذت الكمية حالياً`;
   } else {
     stockEl.className = "stock-pill";
-    stockEl.innerHTML = `<i class="ri-checkbox-circle-fill"></i> متوفر حالياً (${prod.stock} في المخزون)`;
+    stockEl.innerHTML = `<i class="ri-checkbox-circle-fill"></i> متوفر حالياً (${Number(prod.stock)} في المخزون)`;
   }
 
   const mainImg = document.getElementById("prodPageMainImg");
@@ -870,7 +1044,7 @@ function populateProductPageUI(prod) {
     images.forEach((imgUrl, idx) => {
       const th = document.createElement("div");
       th.className = `thumb-item ${idx === 0 ? "active" : ""}`;
-      th.innerHTML = `<img src="${imgUrl}" alt="صورة ${idx + 1}">`;
+      th.innerHTML = `<img src="${escapeHtml(imgUrl)}" alt="صورة ${idx + 1}">`;
       th.addEventListener("click", () => {
         mainImg.src = imgUrl;
         thumbsRow.querySelectorAll(".thumb-item").forEach(t => t.classList.remove("active"));
@@ -894,7 +1068,7 @@ function populateProductPageUI(prod) {
     specs.forEach(sp => {
       const d = document.createElement("div");
       d.className = "spec-card";
-      d.innerHTML = `<i class="${sp.icon}"></i><div><small>${sp.label}</small><strong>${sp.val}</strong></div>`;
+      d.innerHTML = `<i class="${sp.icon}"></i><div><small>${escapeHtml(sp.label)}</small><strong>${escapeHtml(sp.val)}</strong></div>`;
       specsGrid.appendChild(d);
     });
   } else {
@@ -980,7 +1154,7 @@ document.getElementById("shareProductUrlBtn").addEventListener("click", async ()
 });
 
 // ============================================================================
-// 10. صفحة "سلتي وطلباتي" المدمجة (السلات المتعددة + الفواتير بدون هاشتاج)
+// 11. صفحة "سلتي وطلباتي" المدمجة (السلات المتعددة + الفواتير بدون هاشتاج)
 // ============================================================================
 const hubTabCartsBtn = document.getElementById("hubTabCartsBtn");
 const hubTabInvoicesBtn = document.getElementById("hubTabInvoicesBtn");
@@ -1018,6 +1192,8 @@ function saveMultiCarts() {
 
 function addItemToStoreCart(product, qtyToAdd = 1) {
   const stId = product.storeId || "default_store";
+  recordUserInterest({ storeId: stId, category: product.category, productId: product.id, weight: 5 });
+
   if (!multiCarts[stId]) {
     multiCarts[stId] = {
       storeId: stId,
@@ -1104,10 +1280,10 @@ function renderCartsListView() {
     card.innerHTML = `
       <div class="sc-right">
         <div class="sc-logo">
-          ${store.logo ? `<img src="${store.logo}" alt="${store.name}">` : `<i class="ri-store-2-line"></i>`}
+          ${store.logo ? `<img src="${escapeHtml(store.logo)}" alt="${escapeHtml(store.name)}">` : `<i class="ri-store-2-line"></i>`}
         </div>
         <div class="sc-info">
-          <h4>سلة: ${store.name}</h4>
+          <h4>سلة: ${escapeHtml(store.name)}</h4>
           <p>${itemsCount} منتجات — المجموع: <strong>${subtotal} ريال</strong></p>
           <span class="work-status-chip ${workState.badgeClass}" style="display:inline-block; margin-top:4px;">${workState.badgeText}</span>
         </div>
@@ -1170,7 +1346,7 @@ function openStoreCartCheckout(storeId) {
     <div style="display:flex; align-items:center; gap:10px;">
       <i class="ri-store-3-fill" style="color:var(--caramel); font-size:1.4rem;"></i>
       <div>
-        <strong style="font-size:1.04rem;">سلة: ${store.name}</strong>
+        <strong style="font-size:1.04rem;">سلة: ${escapeHtml(store.name)}</strong>
         <div class="hint-text">الطلب بيروح مباشرة لواتساب صاحب هذا المحل</div>
       </div>
     </div>
@@ -1194,12 +1370,12 @@ function openStoreCartCheckout(storeId) {
     row.className = "cart-item";
     row.innerHTML = `
       <div class="cart-item-info">
-        <h4>${item.name}</h4>
-        <span>${item.price} ريال × ${item.qty} = ${item.price * item.qty} ريال</span>
+        <h4>${escapeHtml(item.name)}</h4>
+        <span>${Number(item.price)} ريال × ${Number(item.qty)} = ${Number(item.price) * Number(item.qty)} ريال</span>
       </div>
       <div class="qty-controls">
         <button type="button" class="qty-btn dec-btn"><i class="ri-subtract-line"></i></button>
-        <strong>${item.qty}</strong>
+        <strong>${Number(item.qty)}</strong>
         <button type="button" class="qty-btn inc-btn"><i class="ri-add-line"></i></button>
       </div>
     `;
@@ -1233,7 +1409,7 @@ function openStoreCartCheckout(storeId) {
   });
 
   const totals = calculateStoreCartTotals(store, cartObj.items);
-  document.getElementById("checkoutSmartHint").innerHTML = `<i class="ri-truck-line"></i><span>${totals.hint}</span>`;
+  document.getElementById("checkoutSmartHint").innerHTML = `<i class="ri-truck-line"></i><span>${escapeHtml(totals.hint)}</span>`;
   document.getElementById("chkSubtotal").textContent = totals.subtotal;
   document.getElementById("chkDelivery").textContent = totals.deliveryFee;
   document.getElementById("chkTotal").textContent = totals.total;
@@ -1296,7 +1472,9 @@ function calculateStoreCartTotals(store, items) {
   return { subtotal, deliveryFee, total: subtotal + deliveryFee, hint };
 }
 
-// 11. تحديد الموقع الجغرافي (GPS) للزبون
+// ============================================================================
+// 12. تحديد الموقع الجغرافي (GPS) وإصدار الفاتورة بدون هاشتاج
+// ============================================================================
 document.getElementById("getGpsBtn").addEventListener("click", () => {
   const statusText = document.getElementById("gpsStatusText");
   const gpsInput = document.getElementById("custGpsUrl");
@@ -1323,7 +1501,6 @@ document.getElementById("getGpsBtn").addEventListener("click", () => {
   );
 });
 
-// 12. توليد رقم الفاتورة بدون هاشتاج وإرسال الطلب لواتساب المحل
 function generateUniqueStoreInvoiceNumber(storePrefix = "NF") {
   const cleanPrefix = (storePrefix || "NF").replace(/[^A-Za-z0-9]/g, "").toUpperCase() || "NF";
   const now = new Date();
@@ -1368,7 +1545,6 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
   const gpsLocation = document.getElementById("custGpsUrl").value.trim();
   const customerAddress = document.getElementById("custAddress").value.trim() || "داخل شرورة";
 
-  // حفظ بيانات الزبون للتسهيل في المرات القادمة
   savedCustomerProfile = { name: customerName, phone: customerPhone, gps: gpsLocation, address: customerAddress };
   localStorage.setItem("nafal_customer_profile", JSON.stringify(savedCustomerProfile));
 
@@ -1410,7 +1586,6 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
     const storeWa = (store.whatsappNumber || "").replace(/[^0-9]/g, "");
     const itemsLines = orderData.items.map(i => `• ${i.name} (الكمية: ${i.qty})`).join("\n");
 
-    // نص الفاتورة نظيف وبدون علامة الهاشتاج نهائياً
     const waText = encodeURIComponent(
       `*طلب جديد عبر سوق نفال — ${store.name}*\n` +
       `*رقم الفاتورة:* ${invoiceNumber}\n` +
@@ -1440,7 +1615,9 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
   }
 });
 
-// 13. متابعة الفواتير وحالة المندوب داخل صفحة "سلتي وطلباتي" (بدون هاشتاج)
+// ============================================================================
+// 13. متابعة الفواتير وحالة المندوب داخل صفحة "سلتي وطلباتي"
+// ============================================================================
 let unsubCustomerOrders = null;
 
 function listenToCustomerInvoices(searchCode = "") {
@@ -1504,12 +1681,12 @@ function listenToCustomerInvoices(searchCode = "") {
 
       const courierBoxHtml = order.courierName
         ? `<div class="courier-call-box">
-            <div><i class="ri-e-bike-2-fill"></i> طلبك مع المندوب: <strong>${order.courierName}</strong></div>
-            ${order.courierPhone ? `<a href="tel:${order.courierPhone}" class="btn-glass-sm">اتصال بالمندوب: ${order.courierPhone}</a>` : ""}
+            <div><i class="ri-e-bike-2-fill"></i> طلبك مع المندوب: <strong>${escapeHtml(order.courierName)}</strong></div>
+            ${order.courierPhone ? `<a href="tel:${escapeHtml(order.courierPhone)}" class="btn-glass-sm">اتصال بالمندوب: ${escapeHtml(order.courierPhone)}</a>` : ""}
           </div>`
         : "";
 
-      const itemsText = (order.items || []).map(i => `• ${i.name} (الكمية: ${i.qty})`).join("<br>");
+      const itemsText = (order.items || []).map(i => `• ${escapeHtml(i.name)} (الكمية: ${Number(i.qty)})`).join("<br>");
 
       const acc = document.createElement("div");
       acc.className = `cust-invoice-accordion ${idx === 0 ? "open" : ""}`;
@@ -1518,21 +1695,21 @@ function listenToCustomerInvoices(searchCode = "") {
           <div class="cust-inv-right">
             <div class="cust-arrow"><i class="ri-arrow-down-s-line"></i></div>
             <div>
-              <strong style="font-size:0.95rem; color:var(--espresso);">فاتورة رقم: ${cleanInvNum} — ${order.storeName || "متجر نفال"}</strong>
-              <div class="hint-text">الإجمالي: ${order.totalAmount} ريال — ${new Date(order.createdAt || Date.now()).toLocaleDateString("ar-SA")}</div>
+              <strong style="font-size:0.95rem; color:var(--espresso);">فاتورة رقم: ${escapeHtml(cleanInvNum)} — ${escapeHtml(order.storeName || "متجر نفال")}</strong>
+              <div class="hint-text">الإجمالي: ${Number(order.totalAmount)} ريال — ${new Date(order.createdAt || Date.now()).toLocaleDateString("ar-SA")}</div>
             </div>
           </div>
-          <span class="status-pill ${isCanceled ? 'canceled' : ''}">${order.status}</span>
+          <span class="status-pill ${isCanceled ? 'canceled' : ''}">${escapeHtml(order.status)}</span>
         </button>
 
         <div class="cust-inv-body">
           ${stepsHtml}
           ${courierBoxHtml}
           <div class="glass-inset" style="padding:12px; font-size:0.86rem; line-height:1.7;">
-            <strong>المنتجات المطلوبة من ${order.storeName || "المحل"}:</strong><br>
+            <strong>المنتجات المطلوبة من ${escapeHtml(order.storeName || "المحل")}:</strong><br>
             ${itemsText}
             <div style="margin-top:6px; padding-top:6px; border-top:1px dashed rgba(30,19,13,0.12); font-weight:800;">
-              التوصيل: ${order.deliveryFee} ريال | الإجمالي: ${order.totalAmount} ريال
+              التوصيل: ${Number(order.deliveryFee)} ريال | الإجمالي: ${Number(order.totalAmount)} ريال
             </div>
           </div>
         </div>
