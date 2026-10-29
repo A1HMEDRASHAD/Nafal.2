@@ -1,1268 +1,536 @@
-:root {
-  --bg-base: #F4EFEA;
-  --espresso: #1E130D;
-  --roast-brown: #4A3223;
-  --caramel: #B67B48;
-  --caramel-dark: #8F5B2D;
-  --text-primary: #1E130D;
-  --text-secondary: #685244;
-
-  /* خصائص زجاج أبل النهاري الفخم (Apple Spatial Glass) */
-  --glass-bg: rgba(255, 255, 255, 0.64);
-  --glass-bg-strong: rgba(255, 255, 255, 0.88);
-  --glass-inset-bg: rgba(255, 255, 255, 0.48);
-  --glass-border: rgba(255, 255, 255, 0.92);
-  --glass-border-subtle: rgba(30, 19, 13, 0.08);
-  --glass-shadow: 0 16px 38px -10px rgba(30, 19, 13, 0.08), 
-                  0 2px 6px -1px rgba(30, 19, 13, 0.04),
-                  inset 0 1px 1px 0 rgba(255, 255, 255, 0.98);
-  --glass-blur: blur(28px) saturate(190%);
-  --whatsapp-green: #1FAF54;
-  --danger: #D9383A;
-  --warning: #E69500;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
-  -webkit-tap-highlight-color: transparent;
-}
-
-body {
-  background-color: var(--bg-base);
-  color: var(--text-primary);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow-x: hidden;
-  padding-bottom: 105px; /* مساحة للشريط العائم السفلي */
-}
-
-/* خلفية الإضاءة المحيطية النهارية */
-.ambient-bg {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  pointer-events: none;
-  background: radial-gradient(circle at 50% 0%, #FAF7F2 0%, #EFE6DC 100%);
-}
-
-.orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(85px);
-  opacity: 0.65;
-}
-
-.orb-1 { width: 460px; height: 460px; background: #DFBE9F; top: -120px; right: -100px; }
-.orb-2 { width: 400px; height: 400px; background: #E8D3BD; bottom: 10%; left: -120px; }
-.orb-3 { width: 320px; height: 320px; background: #C9966B; top: 38%; right: 25%; opacity: 0.32; }
-
-.container {
-  max-width: 1220px;
-  margin: 0 auto;
-  padding: 0 14px;
-  width: 100%;
-}
-
-.hidden { display: none !important; }
-
-/* الكلاسات الزجاجية */
-.glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: 22px;
-}
-
-.glass-pill {
-  background: var(--glass-bg-strong);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: 999px;
-}
-
-.glass-inset {
-  background: var(--glass-inset-bg);
-  border: 1px solid rgba(255, 255, 255, 0.82);
-  box-shadow: inset 0 2px 5px rgba(30, 19, 13, 0.03);
-  border-radius: 16px;
-}
-
-/* ==================== الترويسة المدمجة الأنيقة كالبانر (Compact Header Banner) ==================== */
-.compact-header {
-  position: sticky;
-  top: 10px;
-  z-index: 100;
-  margin-top: 10px;
-}
-
-.banner-bar {
-  padding: 10px 14px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.banner-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.mini-logo {
-  width: 42px;
-  height: 42px;
-  border-radius: 13px;
-  background: linear-gradient(135deg, #FFFFFF, rgba(255,255,255,0.55));
-  border: 1px solid #FFF;
-  box-shadow: 0 4px 12px rgba(182, 123, 72, 0.16);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.35rem;
-  color: var(--espresso);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.mini-logo img { width: 100%; height: 100%; object-fit: cover; }
-
-.banner-titles {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.banner-name-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.banner-titles h1 {
-  font-size: 1.15rem;
-  font-weight: 900;
-  color: var(--espresso);
-  line-height: 1.1;
-}
-
-.sharorah-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(182, 123, 72, 0.15);
-  color: var(--roast-brown);
-  border: 1px solid rgba(182, 123, 72, 0.3);
-  padding: 2px 9px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.sharorah-chip i { color: var(--caramel); font-size: 0.82rem; }
-
-.banner-titles p {
-  font-size: 0.76rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-/* محرك البحث المدمج داخل البانر */
-.banner-search-wrap {
-  flex: 1;
-  max-width: 440px;
-  min-width: 220px;
-}
-
-.search-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 12px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid #FFF;
-  transition: 0.2s;
-}
-
-.search-pill:focus-within {
-  background: #FFF;
-  border-color: var(--caramel);
-  box-shadow: 0 4px 14px rgba(182, 123, 72, 0.12);
-}
-
-.search-pill i {
-  color: var(--caramel);
-  font-size: 1.05rem;
-}
-
-.search-pill input {
-  width: 100%;
-  border: none;
-  background: transparent;
-  padding: 9px 0;
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: var(--espresso);
-  outline: none;
-}
-
-.clear-search-btn {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 1rem;
-  display: flex;
-}
-
-/* ==================== الأقسام وشبكة المتاجر ==================== */
-.main-stage {
-  flex: 1;
-  padding: 16px 14px 30px;
-}
-
-.section-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.sec-heading {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.sec-heading i {
-  font-size: 1.45rem;
-  color: var(--caramel);
-}
-
-.sec-heading h2 {
-  font-size: 1.15rem;
-  font-weight: 900;
-  color: var(--espresso);
-}
-
-.sec-heading p {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-.quick-type-filter {
-  display: flex;
-  gap: 6px;
-}
-
-.mini-filter-btn {
-  background: rgba(255, 255, 255, 0.65);
-  border: 1px solid #FFF;
-  color: var(--roast-brown);
-  padding: 6px 12px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.mini-filter-btn.active {
-  background: var(--espresso);
-  color: #FFF;
-  border-color: var(--espresso);
-}
-
-/* شريط التصنيفات الأفقي */
-.pills-scroll-bar {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  padding: 6px;
-  margin-bottom: 16px;
-  border-radius: 16px;
-  scrollbar-width: none;
-}
-
-.pills-scroll-bar::-webkit-scrollbar { display: none; }
-
-.cat-pill {
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid transparent;
-  padding: 8px 14px;
-  border-radius: 12px;
-  font-weight: 800;
-  font-size: 0.85rem;
-  cursor: pointer;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: 0.2s;
-}
-
-.cat-pill:hover { color: var(--espresso); background: rgba(255, 255, 255, 0.5); }
-
-.cat-pill.active {
-  background: #FFF;
-  color: var(--espresso);
-  border-color: #FFF;
-  box-shadow: 0 4px 10px rgba(30, 19, 13, 0.06);
-}
-
-/* شبكة المتاجر في السوق الشعبي */
-.stores-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-}
-
-.store-card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: 20px;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  cursor: pointer;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.store-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 20px 38px -10px rgba(30, 19, 13, 0.13), inset 0 1px 1px #FFF;
-}
-
-.store-card-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.store-card-logo {
-  width: 52px;
-  height: 52px;
-  border-radius: 15px;
-  background: #FFF;
-  border: 1.5px solid #FFF;
-  box-shadow: 0 6px 14px rgba(30, 19, 13, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  color: var(--caramel);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.store-card-logo img { width: 100%; height: 100%; object-fit: cover; }
-
-.store-card-info { flex: 1; min-width: 0; }
-
-.store-card-title-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
-}
-
-.store-card-title {
-  font-size: 1.02rem;
-  font-weight: 900;
-  color: var(--espresso);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.rating-chip {
-  background: rgba(230, 149, 0, 0.16);
-  color: #995C00;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-.store-card-desc {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 2px;
-}
-
-.store-card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 8px;
-  border-top: 1px dashed rgba(30, 19, 13, 0.1);
-  font-size: 0.76rem;
-  font-weight: 800;
-  color: var(--roast-brown);
-}
-
-.work-status-chip {
-  padding: 3px 9px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.work-status-chip.open { background: rgba(31, 175, 84, 0.15); color: #117A37; }
-.work-status-chip.closed { background: rgba(230, 149, 0, 0.18); color: #995C00; }
-.work-status-chip.maint { background: rgba(217, 56, 58, 0.15); color: var(--danger); }
-
-/* ==================== واجهة المتجر الفردي (Single Store Banner) ==================== */
-.sub-nav-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.sub-nav-actions { display: flex; gap: 6px; }
-
-.btn-glass-sm {
-  background: rgba(255, 255, 255, 0.78);
-  color: var(--espresso);
-  border: 1px solid #FFF;
-  padding: 7px 13px;
-  border-radius: 999px;
-  font-weight: 800;
-  font-size: 0.82rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  box-shadow: 0 4px 10px rgba(30, 19, 13, 0.05);
-}
-
-.btn-glass-sm:hover { background: #FFF; }
-
-.store-banner-card {
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.store-banner-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.store-Identity {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.store-avatar {
-  width: 62px;
-  height: 62px;
-  border-radius: 18px;
-  background: #FFF;
-  border: 1.5px solid #FFF;
-  box-shadow: 0 8px 18px rgba(30, 19, 13, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.8rem;
-  color: var(--caramel);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.store-avatar img { width: 100%; height: 100%; object-fit: cover; }
-
-.store-name-line {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.store-name-line h2 {
-  font-size: 1.25rem;
-  font-weight: 900;
-  color: var(--espresso);
-}
-
-.store-meta p {
-  font-size: 0.84rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-  margin-top: 2px;
-}
-
-.store-mini-tags {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: var(--roast-brown);
-}
-
-.store-mini-tags span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.store-mini-tags i { color: var(--caramel); }
-
-.store-social-bar {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.store-action-chip {
-  text-decoration: none;
-  background: var(--espresso);
-  color: #FFF;
-  padding: 7px 13px;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.store-icon-link {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid #FFF;
-  color: var(--espresso);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  font-size: 1.05rem;
-}
-
-.slim-promo {
-  padding: 8px 14px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: var(--espresso);
-}
-
-.slim-promo i { color: var(--caramel); font-size: 1.05rem; }
-
-.store-state-notice {
-  padding: 10px 14px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 800;
-  background: rgba(230, 149, 0, 0.15);
-  color: #8A5200;
-  border: 1px solid rgba(230, 149, 0, 0.35);
-}
-
-/* ==================== شبكة المنتجات (4 بالكمبيوتر و 2 بالجوال بالضبط) ==================== */
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.product-card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: 22px;
-  padding: 9px;
-  display: flex;
-  flex-direction: column;
-  cursor: pointer;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px -10px rgba(30, 19, 13, 0.14), inset 0 1px 1px #FFF;
-}
-
-.product-img-wrap {
-  position: relative;
-  height: 175px;
-  border-radius: 15px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.product-img-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.35s ease;
-}
-
-.product-card:hover .product-img-wrap img { transform: scale(1.04); }
-
-.badge-bundle {
-  position: absolute;
-  top: 7px;
-  left: 7px;
-  background: linear-gradient(135deg, #D9383A, #B85D19);
-  color: #FFF;
-  font-size: 0.7rem;
-  font-weight: 900;
-  padding: 3px 9px;
-  border-radius: 999px;
-  box-shadow: 0 4px 10px rgba(217, 56, 58, 0.3);
-}
-
-.badge-free-delivery {
-  position: absolute;
-  top: 7px;
-  right: 7px;
-  background: rgba(30, 19, 13, 0.82);
-  backdrop-filter: blur(8px);
-  color: #FFF;
-  font-size: 0.68rem;
-  font-weight: 800;
-  padding: 3px 8px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.badge-category {
-  position: absolute;
-  bottom: 7px;
-  left: 7px;
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--espresso);
-  font-size: 0.68rem;
-  font-weight: 800;
-  padding: 3px 8px;
-  border-radius: 8px;
-}
-
-.multi-img-indicator {
-  position: absolute;
-  bottom: 7px;
-  right: 7px;
-  background: rgba(30, 19, 13, 0.75);
-  color: #FFF;
-  font-size: 0.68rem;
-  font-weight: 800;
-  padding: 2px 7px;
-  border-radius: 7px;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.product-info {
-  padding: 10px 4px 2px;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  gap: 4px;
-}
-
-.prod-store-mini {
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: var(--caramel-dark);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.product-title {
-  font-size: 0.96rem;
-  font-weight: 900;
-  color: var(--espresso);
-  line-height: 1.3;
-}
-
-.product-desc {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.product-footer {
-  margin-top: auto;
-  padding-top: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
-}
-
-.product-price {
-  font-size: 1.05rem;
-  font-weight: 900;
-  color: var(--espresso);
-}
-
-.product-price small { font-size: 0.74rem; color: var(--caramel-dark); }
-.product-price del { font-size: 0.75rem; color: var(--text-secondary); margin-right: 4px; font-weight: 600; }
-
-.btn-add {
-  background: var(--espresso);
-  color: #FFF;
-  border: none;
-  padding: 7px 12px;
-  border-radius: 11px;
-  font-weight: 800;
-  font-size: 0.8rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  transition: 0.2s;
-}
-
-.btn-add:hover { background: var(--caramel); }
-.btn-add:disabled { background: rgba(30, 19, 13, 0.25); cursor: not-allowed; }
-
-/* ==================== صفحة تفاصيل المنتج المستقلة ==================== */
-.product-page-card { padding: 20px; }
-
-.detail-body {
-  display: grid;
-  grid-template-columns: 1fr 1.15fr;
-  gap: 22px;
-  align-items: start;
-}
-
-.detail-gallery { display: flex; flex-direction: column; gap: 10px; }
-
-.main-img-stage {
-  position: relative;
-  height: 320px;
-  border-radius: 20px;
-  overflow: hidden;
-  background: #FFF;
-}
-
-.main-img-stage img { width: 100%; height: 100%; object-fit: cover; }
-
-.thumbnails-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
-
-.thumb-item {
-  width: 62px;
-  height: 62px;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 2px solid transparent;
-  cursor: pointer;
-  opacity: 0.65;
-  background: #FFF;
-  flex-shrink: 0;
-}
-
-.thumb-item.active, .thumb-item:hover { border-color: var(--caramel); opacity: 1; }
-.thumb-item img { width: 100%; height: 100%; object-fit: cover; }
-
-.detail-info-col { display: flex; flex-direction: column; gap: 12px; }
-
-.prod-store-link-box {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(182, 123, 72, 0.14);
-  color: var(--espresso);
-  padding: 7px 14px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  align-self: flex-start;
-}
-
-.detail-title-price {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.detail-title-price h2 { font-size: 1.35rem; font-weight: 900; color: var(--espresso); }
-
-.detail-price-box {
-  background: var(--espresso);
-  color: #FFF;
-  padding: 6px 14px;
-  border-radius: 14px;
-  font-size: 1.2rem;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-.detail-price-box small { font-size: 0.78rem; color: var(--caramel); }
-.detail-price-box del { font-size: 0.82rem; color: #CCC; margin-right: 6px; }
-
-.stock-pill { font-size: 0.84rem; font-weight: 800; color: var(--whatsapp-green); display: flex; align-items: center; gap: 5px; }
-.stock-pill.out { color: var(--danger); }
-
-.specs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.spec-card { padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,0.7); border: 1px solid #FFF; display: flex; align-items: center; gap: 8px; }
-.spec-card i { font-size: 1.2rem; color: var(--caramel); }
-.spec-card div { display: flex; flex-direction: column; }
-.spec-card small { font-size: 0.72rem; color: var(--text-secondary); font-weight: 700; }
-.spec-card strong { font-size: 0.86rem; color: var(--espresso); font-weight: 800; }
-
-.detail-desc-box { padding: 14px; display: flex; flex-direction: column; gap: 6px; }
-.detail-desc-box h4 { font-size: 0.9rem; font-weight: 900; color: var(--roast-brown); display: flex; align-items: center; gap: 6px; }
-.detail-desc-box p { font-size: 0.92rem; line-height: 1.7; color: var(--espresso); white-space: pre-line; }
-
-.detail-actions-bar { display: flex; gap: 10px; margin-top: 4px; }
-.detail-qty-selector { display: flex; align-items: center; gap: 12px; padding: 6px 12px; border-radius: 15px; }
-
-.btn-detail-add {
-  flex: 1;
-  background: var(--espresso);
-  color: #FFF;
-  border: none;
-  padding: 13px 18px;
-  border-radius: 15px;
-  font-size: 0.98rem;
-  font-weight: 900;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.btn-detail-add:hover { background: var(--caramel); }
-
-/* ==================== الشريط العائم السفلي (Apple Floating Dock) ==================== */
-.floating-dock-wrapper {
-  position: fixed;
-  bottom: 16px;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  padding: 0 14px;
-  z-index: 900;
-  pointer-events: none;
-}
-
-.floating-dock {
-  pointer-events: auto;
-  padding: 6px 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  border: 1.5px solid #FFFFFF;
-  box-shadow: 0 20px 45px rgba(30, 19, 13, 0.2), 0 4px 12px rgba(30, 19, 13, 0.08);
-  max-width: 490px;
-  width: 100%;
-  justify-content: space-between;
-}
-
-.dock-btn {
-  background: transparent;
-  border: none;
-  color: var(--espresso);
-  padding: 9px 13px;
-  border-radius: 999px;
-  font-weight: 800;
-  font-size: 0.88rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
-}
-
-.dock-btn i { font-size: 1.15rem; color: var(--caramel); }
-.dock-btn.active { background: rgba(182, 123, 72, 0.15); }
-.dock-divider { width: 1px; height: 24px; background: rgba(30, 19, 13, 0.12); }
-
-.dock-cart-btn {
-  flex: 1;
-  background: var(--espresso);
-  color: #FFF;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 999px;
-  font-weight: 800;
-  font-size: 0.9rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  box-shadow: 0 8px 18px rgba(30, 19, 13, 0.22);
-}
-
-.dock-cart-right { display: flex; align-items: center; gap: 6px; }
-.dock-badge { background: var(--caramel); color: #FFF; padding: 1px 7px; border-radius: 999px; font-size: 0.76rem; font-weight: 900; }
-.dock-cart-total { background: rgba(255, 255, 255, 0.15); padding: 2px 9px; border-radius: 999px; font-size: 0.8rem; font-weight: 800; }
-
-/* ==================== نافذة "عرباتي" (السلات المتعددة لكل محل) ==================== */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(30, 19, 13, 0.35);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 14px;
-  z-index: 1000;
-}
-
-.glass-modal {
-  background: rgba(250, 246, 240, 0.92);
-  backdrop-filter: blur(36px) saturate(200%);
-  -webkit-backdrop-filter: blur(36px) saturate(200%);
-  border: 1.5px solid #FFF;
-  box-shadow: 0 28px 60px rgba(30, 19, 13, 0.24), inset 0 1px 1px #FFF;
-  width: 100%;
-  max-width: 620px;
-  max-height: 90vh;
-  border-radius: 28px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.modal-header {
-  padding: 16px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--glass-border-subtle);
-}
-
-.modal-title { display: flex; align-items: center; gap: 8px; }
-.modal-title i { font-size: 1.35rem; color: var(--caramel); }
-.modal-title h2 { font-size: 1.12rem; font-weight: 900; color: var(--espresso); }
-
-.icon-close-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(30, 19, 13, 0.08);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-  color: var(--espresso);
-  cursor: pointer;
-}
-
-.modal-body {
-  padding: 18px 20px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-/* بطاقات سلات المحلات داخل "عرباتي" */
-.store-carts-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.store-cart-card {
-  background: rgba(255, 255, 255, 0.8);
-  border: 1.5px solid #FFF;
-  border-radius: 20px;
-  padding: 14px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  box-shadow: 0 6px 16px rgba(30, 19, 13, 0.05);
-  transition: 0.2s;
-}
-
-.store-cart-card:hover {
-  background: #FFF;
-  border-color: var(--caramel);
-  transform: translateX(-3px);
-}
-
-.sc-right { display: flex; align-items: center; gap: 12px; }
-.sc-logo {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: var(--bg-base);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  color: var(--caramel);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.sc-logo img { width: 100%; height: 100%; object-fit: cover; }
-
-.sc-info h4 { font-size: 1rem; font-weight: 900; color: var(--espresso); }
-.sc-info p { font-size: 0.82rem; color: var(--text-secondary); font-weight: 700; }
-
-.sc-left { display: flex; align-items: center; gap: 10px; }
-.sc-open-btn {
-  background: var(--espresso);
-  color: #FFF;
-  padding: 8px 14px;
-  border-radius: 12px;
-  font-size: 0.84rem;
-  font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.cart-store-header {
-  padding: 12px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.smart-hint {
-  padding: 11px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-weight: 800;
-  font-size: 0.88rem;
-  color: var(--espresso);
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-.blocker-notice {
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: rgba(217, 56, 58, 0.12);
-  border: 1px solid rgba(217, 56, 58, 0.35);
-  color: var(--danger);
-  font-weight: 800;
-  font-size: 0.88rem;
-  text-align: center;
-  margin: 10px 0;
-}
-
-/* عناصر السلة والنماذج */
-.cart-items { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-.cart-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.76);
-  border: 1px solid #FFF;
-  padding: 10px 14px;
-  border-radius: 14px;
-}
-.cart-item-info h4 { font-size: 0.92rem; font-weight: 800; color: var(--espresso); }
-.cart-item-info span { font-size: 0.82rem; color: var(--caramel-dark); font-weight: 800; }
-
-.qty-controls { display: flex; align-items: center; gap: 8px; }
-.qty-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  border: 1px solid rgba(30, 19, 13, 0.12);
-  background: #FFF;
-  color: var(--espresso);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.cart-summary { padding: 14px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-.summary-row { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); }
-.total-row { border-top: 1px solid var(--glass-border-subtle); padding-top: 8px; font-size: 1.1rem; color: var(--espresso); font-weight: 900; }
-
-.checkout-form { display: flex; flex-direction: column; gap: 11px; }
-.section-heading { display: flex; align-items: center; gap: 7px; padding-bottom: 5px; border-bottom: 1px solid var(--glass-border-subtle); }
-.section-heading i { color: var(--caramel); font-size: 1.2rem; }
-.section-heading h3 { font-size: 0.98rem; font-weight: 900; }
-
-.form-group { display: flex; flex-direction: column; gap: 5px; }
-.form-group label { font-size: 0.84rem; font-weight: 800; color: var(--roast-brown); }
-
-.input-glass-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1.5px solid #FFF;
-  padding: 0 12px;
-  border-radius: 13px;
-}
-.input-glass-wrap i { color: var(--caramel); font-size: 1.1rem; }
-.input-glass-wrap input { width: 100%; border: none; background: transparent; padding: 11px 0; font-size: 0.92rem; font-weight: 600; color: var(--espresso); outline: none; }
-
-.flex-1 { flex: 1; }
-.gps-row { display: flex; gap: 8px; }
-.btn-gps {
-  background: rgba(182, 123, 72, 0.18);
-  color: var(--espresso);
-  border: 1px solid rgba(182, 123, 72, 0.4);
-  padding: 10px 13px;
-  border-radius: 13px;
-  font-weight: 800;
-  font-size: 0.84rem;
-  cursor: pointer;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.hint-text { font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; }
-
-.btn-submit-order {
-  background: var(--whatsapp-green);
-  color: #FFF;
-  border: none;
-  padding: 14px;
-  border-radius: 15px;
-  font-size: 0.98rem;
-  font-weight: 900;
-  cursor: pointer;
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  box-shadow: 0 10px 22px rgba(31, 175, 84, 0.25);
-}
-.btn-submit-order:disabled { background: #AAA; box-shadow: none; cursor: not-allowed; }
-
-/* ==================== فواتيري المنسدلة وتقييم النجوم ==================== */
-.track-search-box { display: flex; gap: 8px; }
-.btn-search { background: var(--espresso); color: #FFF; border: none; padding: 0 16px; border-radius: 13px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
-
-.customer-orders-list { display: flex; flex-direction: column; gap: 10px; }
-.cust-invoice-accordion { background: rgba(255, 255, 255, 0.76); border: 1.5px solid #FFF; border-radius: 18px; overflow: hidden; }
-.cust-inv-header { width: 100%; background: transparent; border: none; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; text-align: right; gap: 10px; }
-.cust-inv-right { display: flex; align-items: center; gap: 10px; }
-.cust-arrow { width: 32px; height: 32px; border-radius: 9px; background: rgba(182, 123, 72, 0.15); color: var(--espresso); display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-.cust-invoice-accordion.open .cust-arrow { transform: rotate(180deg); background: var(--espresso); color: #FFF; }
-
-.status-pill { background: rgba(182, 123, 72, 0.18); color: var(--espresso); padding: 4px 11px; border-radius: 999px; font-size: 0.78rem; font-weight: 800; }
-.status-pill.canceled { background: rgba(217, 56, 58, 0.15); color: var(--danger); }
-
-.cust-inv-body { display: none; padding: 14px 16px 16px; border-top: 1px solid var(--glass-border-subtle); flex-direction: column; gap: 10px; }
-.cust-invoice-accordion.open .cust-inv-body { display: flex; }
-
-.status-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-.step-box { text-align: center; padding: 8px 4px; border-radius: 10px; font-size: 0.7rem; background: rgba(255,255,255,0.65); color: var(--text-secondary); font-weight: 800; display: flex; flex-direction: column; align-items: center; gap: 3px; border: 1px solid #FFF; }
-.step-box.done { background: var(--espresso); color: #FFF; }
-
-.courier-call-box {
-  background: rgba(31, 175, 84, 0.14);
-  border: 1px solid rgba(31, 175, 84, 0.35);
-  color: #0E692F;
-  padding: 10px 14px;
-  border-radius: 12px;
-  font-weight: 800;
-  font-size: 0.86rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.stars-selector { display: flex; gap: 8px; margin: 10px 0; direction: ltr; }
-.stars-selector button { background: none; border: none; font-size: 2.3rem; color: #DDD; cursor: pointer; transition: 0.15s; }
-.stars-selector button.active { color: #F5A623; transform: scale(1.08); }
-
-/* الفوتر واللودر */
-.site-footer { margin-top: auto; padding-bottom: 10px; }
-.footer-glass { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-.footer-brand h3 { font-size: 0.98rem; font-weight: 900; }
-.footer-brand p { font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; }
-
-.toast { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); padding: 11px 20px; font-weight: 900; font-size: 0.9rem; z-index: 2500; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
-.toast i { color: var(--whatsapp-green); font-size: 1.25rem; }
-
-.loading-box { grid-column: 1 / -1; text-align: center; padding: 40px 20px; font-weight: 800; color: var(--roast-brown); display: flex; align-items: center; justify-content: center; gap: 8px; }
-.spin-icon { display: inline-block; animation: spin 1s linear infinite; }
-@keyframes spin { 100% { transform: rotate(360deg); } }
-
-/* ==================== التجاوب الشبكي (2 منتجات جنب بعض بالجوال و 4 بالكمبيوتر) ==================== */
-@media (max-width: 1024px) {
-  .products-grid { grid-template-columns: repeat(3, 1fr); }
-  .stores-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 768px) {
-  .banner-search-wrap { max-width: 100%; width: 100%; }
-  .stores-grid { grid-template-columns: 1fr; }
-  .products-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .product-card { padding: 8px; border-radius: 18px; }
-  .product-img-wrap { height: 140px; border-radius: 13px; }
-  .product-title { font-size: 0.88rem; }
-  .product-price { font-size: 0.96rem; }
-  .btn-add { padding: 6px 10px; font-size: 0.76rem; }
-  .detail-body { grid-template-columns: 1fr; }
-  .main-img-stage { height: 240px; }
-  .gps-row { flex-direction: column; }
-  .status-steps { grid-template-columns: repeat(2, 1fr); }
-}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="pageMetaTitle">سوق نفال — شرورة</title>
+  <meta name="description" id="pageMetaDesc" content="سوق نفال الإلكتروني في شرورة — تصفح أفضل متاجر القهوة المختصة، الأسر المنتجة، العسل، والتمور واطلب مباشرة.">
+  <meta name="robots" content="index, follow">
+
+  <!-- أيقونة محرك البحث جوجل والمتصفح (تتحدث تلقائياً من شعار البوابة الذكية) -->
+  <link rel="icon" id="dynamicFavicon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/924/924514.png">
+  <link rel="apple-touch-icon" id="dynamicAppleIcon" href="https://cdn-icons-png.flaticon.com/512/924/924514.png">
+
+  <!-- وسوم المشاركة الذكية في واتساب وسناب وتويتر (تتغير تلقائياً لصورة المتجر أو المنتج) -->
+  <meta property="og:title" id="ogMetaTitle" content="سوق نفال — شرورة">
+  <meta property="og:description" id="ogMetaDesc" content="كل متاجر ومحامص وأسر شرورة في مكان واحد.">
+  <meta property="og:image" id="ogMetaImage" content="https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=800&q=80">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" id="twitterMetaImage" content="https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=800&q=80">
+
+  <!-- بيانات Schema.org لمحركات بحث جوجل -->
+  <script type="application/ld+json" id="seoJsonLd">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "سوق نفال — شرورة",
+    "description": "منصة المتاجر المحلية والأسر المنتجة في شرورة"
+  }
+  </script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- خلفية الإضاءة المحيطية النهارية (Apple Spatial Glass) -->
+  <div class="ambient-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- ==================== الترويسة النحيفة والأنيقة جداً (الشعار + الاسم فقط) ==================== -->
+  <header class="slim-top-header">
+    <div class="container">
+      <div class="slim-header-bar glass-panel">
+        <div class="header-brand-click" id="goHomeBrandBtn">
+          <div class="header-logo-box">
+            <img id="platformLogoImg" src="" alt="شعار نفال" class="hidden">
+            <i id="platformLogoIcon" class="ri-cup-line"></i>
+          </div>
+          <div class="header-title-wrap">
+            <h1 id="platformTitle">سوق نفال</h1>
+            <span id="platformSlogan" class="welcome-sub">ارحبوا.. متاجر شرورة بين يديك</span>
+          </div>
+        </div>
+
+        <!-- زر رجوع سريع يظهر فقط عند الدخول لصفحة فرعية -->
+        <button type="button" id="topQuickBackBtn" class="btn-glass-sm hidden">
+          <i class="ri-arrow-right-line"></i>
+          <span>رجوع للسوق</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== مسرح الصفحات الكاملة (SPA Views - بدون نوافذ منبثقة) ==================== -->
+  <main class="container main-stage">
+
+    <!-- ========================================================================= -->
+    <!-- الصفحة 1: واجهة السوق الشعبي الرئيسية -->
+    <!-- ========================================================================= -->
+    <div id="marketplaceView" class="spa-view">
+
+      <!-- قسم دكاكين ومتاجر شرورة -->
+      <section id="storesDirectorySection" class="market-section">
+        <div class="section-bar">
+          <div class="sec-heading">
+            <i class="ri-store-3-fill"></i>
+            <div>
+              <h2>دكاكين ومتاجر شرورة</h2>
+              <p>اضغط على المحل اللي تبيه وتصفح بضاعته</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- شريط تصنيفات المتاجر -->
+        <div id="marketCategoriesBar" class="pills-scroll-bar glass-panel">
+          <button type="button" class="cat-pill active" data-mcat="all">
+            <i class="ri-apps-2-line"></i>
+            <span>كل المتاجر</span>
+          </button>
+        </div>
+
+        <!-- شبكة المتاجر -->
+        <div id="storesGrid" class="stores-grid">
+          <div class="loading-box glass-panel">
+            <i class="ri-loader-4-line spin-icon"></i>
+            <span>جاري فتح دكاكين ومتاجر شرورة...</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- قسم أحدث المنتجات والبكجات -->
+      <section class="market-section" style="margin-top: 26px;">
+        <div class="section-bar">
+          <div class="sec-heading">
+            <i class="ri-fire-fill"></i>
+            <div>
+              <h2>أحدث المنتجات وبكجات التوفير</h2>
+              <p>اضغط على أي منتج لتفاصيله أو أضفه لسلتك مباشرة</p>
+            </div>
+          </div>
+
+          <div class="quick-type-filter">
+            <button type="button" class="mini-filter-btn active" data-ptype="all">الكل</button>
+            <button type="button" class="mini-filter-btn" data-ptype="bundle">🔥 البكجات والعروض</button>
+          </div>
+        </div>
+
+        <!-- شبكة المنتجات (2 بالجوال و 4 بالكمبيوتر) -->
+        <div id="marketProductsGrid" class="products-grid"></div>
+      </section>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- الصفحة 2: صفحة البحث المستقلة والواضحة -->
+    <!-- ========================================================================= -->
+    <div id="searchView" class="spa-view hidden">
+      <div class="search-page-card glass-panel">
+        <div class="sec-heading" style="margin-bottom: 14px;">
+          <i class="ri-search-eye-line"></i>
+          <div>
+            <h2>البحث السريع في سوق شرورة</h2>
+            <p>ابحث باسم المنتج (قهوة، حلى، عسل، تمر) أو باسم المحل</p>
+          </div>
+        </div>
+
+        <div class="big-search-box glass-inset">
+          <i class="ri-search-2-line"></i>
+          <input type="text" id="globalSearchInput" placeholder="اكتب هنا وش بخاطرك اليوم...">
+          <button type="button" id="clearSearchBtn" class="clear-search-btn hidden" aria-label="مسح">
+            <i class="ri-close-circle-fill"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- نتائج البحث للمتاجر -->
+      <div id="searchStoresSection" class="market-section" style="margin-top: 20px;">
+        <h3 class="search-sub-heading"><i class="ri-store-2-line"></i> المحلات المطابقة</h3>
+        <div id="searchStoresGrid" class="stores-grid"></div>
+      </div>
+
+      <!-- نتائج البحث للمنتجات -->
+      <div id="searchProductsSection" class="market-section" style="margin-top: 22px;">
+        <h3 class="search-sub-heading"><i class="ri-shopping-bag-3-line"></i> المنتجات المطابقة</h3>
+        <div id="searchProductsGrid" class="products-grid"></div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- الصفحة 3: صفحة "سلتي وطلباتي" المدمجة (مبسطة جداً لكبار السن والجميع) -->
+    <!-- ========================================================================= -->
+    <div id="ordersAndCartsView" class="spa-view hidden">
+
+      <!-- أزرار التبديل الكبيرة والواضحة أعلى الصفحة -->
+      <div class="hub-switcher glass-panel">
+        <button type="button" id="hubTabCartsBtn" class="hub-tab-btn active">
+          <i class="ri-shopping-basket-2-fill"></i>
+          <span>سلات المشتريات</span>
+          <span id="hubCartsCountBadge" class="inline-count">0</span>
+        </button>
+
+        <button type="button" id="hubTabInvoicesBtn" class="hub-tab-btn">
+          <i class="ri-file-list-3-fill"></i>
+          <span>فواتيري ومتابعة الطلب</span>
+        </button>
+      </div>
+
+      <!-- القسم أ: سلات المحلات وإتمام الطلب -->
+      <div id="hubCartsSection">
+        
+        <!-- 1. قائمة سلات المحلات -->
+        <div id="cartsListView">
+          <div class="helper-banner glass-panel">
+            <i class="ri-information-line"></i>
+            <span>كل محل تختار منه منتجات ينحفظ في سلة مستقلة باسمه. اضغط على سلة المحل لتأكيد طلبك منه:</span>
+          </div>
+          <div id="storeCartsCardsContainer" class="store-carts-grid"></div>
+        </div>
+
+        <!-- 2. شاشة إتمام الطلب من محل معين (صفحة كاملة مريحة) -->
+        <div id="activeStoreCartCheckoutView" class="hidden">
+          <div class="sub-nav-row">
+            <button type="button" id="backToCartsListBtn" class="btn-glass-sm">
+              <i class="ri-arrow-right-line"></i>
+              <span>الرجوع لكل السلات</span>
+            </button>
+          </div>
+
+          <div class="checkout-page-card glass-panel">
+            <!-- هيدر المحل المختار -->
+            <div id="checkoutStoreHeader" class="cart-store-header glass-inset"></div>
+
+            <!-- شريط عروض التوصيل الخاصة بهذا المحل -->
+            <div id="checkoutSmartHint" class="smart-hint glass-inset"></div>
+
+            <!-- قائمة المنتجات في السلة -->
+            <div id="checkoutCartItemsList" class="cart-items"></div>
+
+            <!-- ملخص الفاتورة -->
+            <div class="cart-summary glass-inset">
+              <div class="summary-row">
+                <span>قيمة المنتجات</span>
+                <span><strong id="chkSubtotal">0</strong> ريال</span>
+              </div>
+              <div class="summary-row">
+                <span>رسوم توصيل المحل</span>
+                <span><strong id="chkDelivery">0</strong> ريال</span>
+              </div>
+              <div class="summary-row total-row">
+                <span>الإجمالي النهائي</span>
+                <span><strong id="chkTotal">0</strong> ريال</span>
+              </div>
+            </div>
+
+            <!-- تنبيه في حال كان المحل مغلق أو لم يصل للحد الأدنى -->
+            <div id="checkoutBlockerNotice" class="blocker-notice hidden"></div>
+
+            <!-- نموذج بيانات الزبون الكبير والواضح -->
+            <form id="checkoutForm" class="checkout-form">
+              <div class="section-heading">
+                <i class="ri-user-location-line"></i>
+                <h3>بياناتك لتوصيل الطلب (داخل شرورة)</h3>
+              </div>
+
+              <div class="form-group">
+                <label>اسمك الكريم *</label>
+                <div class="input-glass-wrap">
+                  <i class="ri-user-3-line"></i>
+                  <input type="text" id="custName" placeholder="اكتب اسمك أو اللقب" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>رقم الجوال (واتساب) *</label>
+                <div class="input-glass-wrap">
+                  <i class="ri-smartphone-line"></i>
+                  <input type="tel" id="custPhone" placeholder="05XXXXXXXX" dir="ltr" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>تحديد موقعك بالـ GPS (بضغطة زر) *</label>
+                <div class="gps-row">
+                  <button type="button" id="getGpsBtn" class="btn-gps">
+                    <i class="ri-compass-3-line"></i>
+                    <span>اضغط هنا لتحديد موقعك بالـ GPS</span>
+                  </button>
+                  <div class="input-glass-wrap flex-1">
+                    <i class="ri-map-pin-2-line"></i>
+                    <input type="text" id="custGpsUrl" placeholder="رابط موقعك يظهر هنا تلقائياً" readonly required>
+                  </div>
+                </div>
+                <small id="gpsStatusText" class="hint-text">يسهل على المندوب الوصول لبيتك بسرعة في شرورة</small>
+              </div>
+
+              <div class="form-group">
+                <label>اسم الحي / وصف البيت أو ملاحظة للمحل</label>
+                <div class="input-glass-wrap">
+                  <i class="ri-home-4-line"></i>
+                  <input type="text" id="custAddress" placeholder="مثال: حي الخالدية - بجوار مسجد...">
+                </div>
+              </div>
+
+              <button type="submit" id="submitOrderBtn" class="btn-submit-order">
+                <i class="ri-whatsapp-line"></i>
+                <span id="submitOrderBtnText">أكد طلبك وأرسله لواتساب المحل</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- القسم ب: فواتيري ومتابعة حالة الطلب والمندوب (بدون هاشتاج) -->
+      <div id="hubInvoicesSection" class="hidden">
+        <div class="glass-panel" style="padding: 18px; margin-bottom: 16px;">
+          <div class="track-search-box">
+            <div class="input-glass-wrap flex-1">
+              <i class="ri-file-search-line"></i>
+              <input type="text" id="searchInvoiceInput" placeholder="ابحث برقم الفاتورة (مثال: NF-2610-A9F2)" dir="ltr">
+            </div>
+            <button type="button" id="searchInvoiceBtn" class="btn-search">
+              <i class="ri-search-2-line"></i>
+              <span>بحث</span>
+            </button>
+          </div>
+          <p class="hint-text" style="margin-top: 10px;">
+            اضغط على أي فاتورة بالأسفل لفتحها ومعرفة مرحلة تجهيز طلبك ورقم المندوب:
+          </p>
+        </div>
+
+        <div id="customerOrdersList" class="customer-orders-list"></div>
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- الصفحة 4: واجهة المتجر الفردي -->
+    <!-- ========================================================================= -->
+    <div id="singleStoreView" class="spa-view hidden">
+
+      <div class="sub-nav-row">
+        <div class="sub-nav-actions">
+          <button type="button" id="rateStoreBtn" class="btn-glass-sm">
+            <i class="ri-star-smile-line"></i>
+            <span>قيّم المحل</span>
+          </button>
+          <button type="button" id="shareStoreBtn" class="btn-glass-sm">
+            <i class="ri-share-forward-line"></i>
+            <span>مشاركة رابط المحل</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- بطاقة تعريف المتجر الأنيقة -->
+      <div class="store-banner-card glass-panel">
+        <div class="store-banner-top">
+          <div class="store-Identity">
+            <div class="store-avatar">
+              <img id="stViewLogoImg" src="" alt="شعار المتجر" class="hidden">
+              <i id="stViewLogoIcon" class="ri-store-2-line"></i>
+            </div>
+            <div class="store-meta">
+              <div class="store-name-line">
+                <h2 id="stViewName">اسم المتجر</h2>
+                <span id="stViewRatingBadge" class="rating-chip">5.0 ★</span>
+                <span id="stViewWorkBadge" class="work-status-chip open">مفتوح الحين</span>
+              </div>
+              <p id="stViewDesc">وصف المتجر التعريفي</p>
+              <div class="store-mini-tags">
+                <span id="stViewHoursText"><i class="ri-time-line"></i> مفتوح 24 ساعة</span>
+                <span id="stViewMinOrderText"><i class="ri-shopping-basket-line"></i> بدون حد أدنى</span>
+                <span id="stViewDeliveryText"><i class="ri-e-bike-2-line"></i> التوصيل: 15 ريال</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="store-social-bar">
+            <a id="stViewMapsLink" href="#" target="_blank" class="store-action-chip map-chip hidden">
+              <i class="ri-map-pin-2-fill"></i>
+              <span>زورنا بالمحل</span>
+            </a>
+            <a id="stViewSnapLink" href="#" target="_blank" class="store-icon-link hidden" title="سناب شات">
+              <i class="ri-snapchat-line"></i>
+            </a>
+            <a id="stViewTiktokLink" href="#" target="_blank" class="store-icon-link hidden" title="تيك توك">
+              <i class="ri-tiktok-line"></i>
+            </a>
+            <a id="stViewInstaLink" href="#" target="_blank" class="store-icon-link hidden" title="إنستغرام">
+              <i class="ri-instagram-line"></i>
+            </a>
+          </div>
+        </div>
+
+        <div id="stViewPromoStrip" class="slim-promo glass-inset">
+          <i class="ri-sparkling-2-fill"></i>
+          <span id="stViewPromoText"></span>
+        </div>
+
+        <div id="stViewStateNotice" class="store-state-notice hidden"></div>
+      </div>
+
+      <!-- أقسام المتجر الداخلية -->
+      <div id="stViewCategoriesBar" class="pills-scroll-bar glass-panel" style="margin-top: 14px;"></div>
+
+      <!-- شبكة منتجات المتجر -->
+      <div id="stViewProductsGrid" class="products-grid" style="margin-top: 14px;"></div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- الصفحة 5: صفحة المنتج المستقلة (لدعم فهرسة جوجل والمشاركة المباشرة) -->
+    <!-- ========================================================================= -->
+    <div id="singleProductPageView" class="spa-view hidden">
+      <div class="sub-nav-row">
+        <div class="sub-nav-actions">
+          <button type="button" id="goToProductStoreBtn" class="btn-glass-sm">
+            <i class="ri-store-2-line"></i>
+            <span id="prodPageStoreBtnName">زيارة المحل</span>
+          </button>
+          <button type="button" id="shareProductUrlBtn" class="btn-glass-sm">
+            <i class="ri-share-line"></i>
+            <span>مشاركة رابط المنتج</span>
+          </button>
+        </div>
+      </div>
+
+      <article class="product-page-card glass-panel">
+        <div class="detail-body">
+          <!-- معرض الصور -->
+          <div class="detail-gallery">
+            <div class="main-img-stage glass-inset">
+              <img id="prodPageMainImg" src="" alt="صورة المنتج">
+              <span id="prodPageBundleBadge" class="badge-bundle hidden">🔥 بكج توفير</span>
+              <span id="prodPageFreeBadge" class="badge-free-delivery hidden"><i class="ri-truck-line"></i> توصيل مجاني</span>
+              <span id="prodPageCategoryBadge" class="badge-category"></span>
+            </div>
+            <div id="prodPageThumbnails" class="thumbnails-row hidden"></div>
+          </div>
+
+          <!-- تفاصيل المنتج -->
+          <div class="detail-info-col">
+            <div class="prod-store-link-box" id="prodPageStoreBanner">
+              <i class="ri-store-3-line"></i>
+              <span>يباع لدى: <strong id="prodPageStoreName"></strong></span>
+              <i class="ri-arrow-left-s-line"></i>
+            </div>
+
+            <div class="detail-title-price">
+              <h2 id="prodPageTitle"></h2>
+              <div class="detail-price-box">
+                <span id="prodPagePrice">0</span> <small>ريال</small>
+                <del id="prodPageOldPrice" class="hidden"></del>
+              </div>
+            </div>
+
+            <div id="prodPageStockStatus" class="stock-pill"></div>
+
+            <div id="prodPageSpecsGrid" class="specs-grid hidden"></div>
+
+            <div class="detail-desc-box glass-inset">
+              <h4><i class="ri-file-text-line"></i> التفاصيل والوصف</h4>
+              <p id="prodPageFullDesc"></p>
+            </div>
+
+            <div class="detail-actions-bar">
+              <div class="detail-qty-selector glass-inset">
+                <button type="button" id="prodPageQtyMinus" class="qty-btn"><i class="ri-subtract-line"></i></button>
+                <strong id="prodPageQtyVal">1</strong>
+                <button type="button" id="prodPageQtyPlus" class="qty-btn"><i class="ri-add-line"></i></button>
+              </div>
+
+              <button type="button" id="prodPageAddToCartBtn" class="btn-detail-add">
+                <i class="ri-shopping-bag-3-fill"></i>
+                <span id="prodPageAddBtnText">أضف لسلة المحل</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+  </main>
+
+  <!-- ==================== الفوتر الهادئ (يضم تنبيه شرورة بدون إزعاج) ==================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-glass glass-panel">
+        <div class="sharorah-footer-pill glass-inset">
+          <i class="ri-map-pin-range-fill"></i>
+          <span id="platformBannerText">التوصيل والخدمة مخصصة لأهلنا داخل شرورة فقط</span>
+        </div>
+        <div class="footer-brand">
+          <h3 id="footerName">سوق نفال — شرورة</h3>
+          <p>منصة المتاجر المحلية والأسر المنتجة — كل طلب يوصلك مباشرة من صاحب المحل</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== الشريط السفلي العائم الأنيق والواضح (3 أزرار فقط) ==================== -->
+  <div class="floating-dock-wrapper">
+    <nav class="floating-dock glass-pill">
+      
+      <button type="button" id="dockMarketBtn" class="dock-nav-item active">
+        <i class="ri-store-3-line"></i>
+        <span>السوق</span>
+      </button>
+
+      <button type="button" id="dockSearchBtn" class="dock-nav-item">
+        <i class="ri-search-2-line"></i>
+        <span>البحث</span>
+      </button>
+
+      <button type="button" id="dockHubBtn" class="dock-nav-item">
+        <div class="dock-icon-wrap">
+          <i class="ri-shopping-bag-3-line"></i>
+          <span id="dockTotalBadge" class="dock-clean-badge hidden">0</span>
+        </div>
+        <span>سلتي وطلباتي</span>
+      </button>
+
+    </nav>
+  </div>
+
+  <!-- نافذة تقييم المحل بالنجوم -->
+  <div id="ratingModal" class="modal-overlay hidden">
+    <div class="modal-card glass-modal" style="max-width: 380px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="ri-star-smile-line"></i>
+          <h2>قيّم تجربتك مع المحل</h2>
+        </div>
+        <button type="button" id="closeRatingModalBtn" class="icon-close-btn">&times;</button>
+      </div>
+      <div class="modal-body" style="align-items:center; text-align:center;">
+        <p class="hint-text">تقييمك يساعد أهل شرورة في اختيار أفضل المتاجر:</p>
+        <div id="starsSelector" class="stars-selector">
+          <button type="button" data-star="1">★</button>
+          <button type="button" data-star="2">★</button>
+          <button type="button" data-star="3">★</button>
+          <button type="button" data-star="4">★</button>
+          <button type="button" data-star="5" class="active">★</button>
+        </div>
+        <button type="button" id="submitRatingBtn" class="btn-detail-add" style="width:100%;">
+          <i class="ri-check-double-line"></i>
+          <span>اعتماد التقييم</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- إشعار عائم زجاجي -->
+  <div id="toast" class="toast glass-pill hidden">
+    <i class="ri-checkbox-circle-fill"></i>
+    <span id="toastText">تمت الإضافة</span>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
