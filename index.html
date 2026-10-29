@@ -29,10 +29,12 @@
   }
   </script>
 
+  <!-- الخط العربي + مكتبة الأيقونات الرسمية مع رابط احتياطي لضمان الظهور 100% -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.3.0/remixicon.min.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -70,8 +72,29 @@
   <!-- ==================== مسرح الصفحات الكاملة (SPA Views) ==================== -->
   <main class="container main-stage">
 
-    <!-- 1. واجهة السوق الشعبي الرئيسية -->
+    <!-- ========================================================================= -->
+    <!-- الصفحة 1: واجهة السوق الشعبي الرئيسية -->
+    <!-- ========================================================================= -->
     <div id="marketplaceView" class="spa-view">
+
+      <!-- قسم خوارزمية الاقتراحات الذكية (يظهر حسب اهتمامات العميل وتصفحه) -->
+      <section id="recommendationsSection" class="market-section rec-section hidden">
+        <div class="section-bar">
+          <div class="sec-heading">
+            <i class="ri-magic-fill"></i>
+            <div>
+              <h2 id="recSectionTitle">اخترنا لك على ذوقك</h2>
+              <p id="recSectionSubtitle">منتجات ومحلات مقترحة بناءً على اهتماماتك في السوق</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- شريط المحلات المقترحة للعميل -->
+        <div id="recommendedStoresRow" class="rec-stores-row hidden"></div>
+
+        <!-- شبكة المنتجات المقترحة للعميل -->
+        <div id="recommendedProductsGrid" class="products-grid"></div>
+      </section>
 
       <!-- قسم دكاكين ومتاجر شرورة -->
       <section id="storesDirectorySection" class="market-section">
@@ -122,7 +145,9 @@
 
     </div>
 
-    <!-- 2. صفحة البحث المستقلة -->
+    <!-- ========================================================================= -->
+    <!-- الصفحة 2: صفحة البحث المستقلة -->
+    <!-- ========================================================================= -->
     <div id="searchView" class="spa-view hidden">
       <div class="search-page-card glass-panel">
         <div class="sec-heading search-head-margin">
@@ -153,7 +178,9 @@
       </div>
     </div>
 
-    <!-- 3. صفحة "سلتي وطلباتي" المدمجة -->
+    <!-- ========================================================================= -->
+    <!-- الصفحة 3: صفحة "سلتي وطلباتي" المدمجة -->
+    <!-- ========================================================================= -->
     <div id="ordersAndCartsView" class="spa-view hidden">
 
       <div class="hub-switcher glass-panel">
@@ -288,7 +315,9 @@
 
     </div>
 
-    <!-- 4. واجهة المتجر الفردي -->
+    <!-- ========================================================================= -->
+    <!-- الصفحة 4: واجهة المتجر الفردي -->
+    <!-- ========================================================================= -->
     <div id="singleStoreView" class="spa-view hidden">
 
       <div class="sub-nav-row">
@@ -356,7 +385,9 @@
 
     </div>
 
-    <!-- 5. صفحة المنتج المستقلة -->
+    <!-- ========================================================================= -->
+    <!-- الصفحة 5: صفحة المنتج المستقلة -->
+    <!-- ========================================================================= -->
     <div id="singleProductPageView" class="spa-view hidden">
       <div class="sub-nav-row">
         <div class="sub-nav-actions">
