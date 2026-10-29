@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="pageMetaTitle">سوق نفال — شرورة | متاجر وأسر شرورة بين يديك</title>
+  <meta name="description" id="pageMetaDesc" content="سوق نفال الإلكتروني في شرورة — تصفح أفضل متاجر القهوة المختصة، الأسر المنتجة، العسل، والتمور واطلب مباشرة مع توصيل سريع داخل شرورة.">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" id="ogMetaTitle" content="سوق نفال — شرورة">
+  <meta property="og:description" id="ogMetaDesc" content="كل متاجر ومحامص وأسر شرورة في مكان واحد.">
+  <meta property="og:type" content="website">
+
+  <!-- بيانات Schema.org المهيكلة لمحركات بحث قوقل (تتحدث ديناميكياً لكل متجر ولكل منتج) -->
+  <script type="application/ld+json" id="seoJsonLd">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "سوق نفال — شرورة",
+    "description": "منصة المتاجر المحلية والأسر المنتجة في شرورة"
+  }
+  </script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- خلفية الإضاءة المحيطية النهارية (Apple Spatial Glass) -->
+  <div class="ambient-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- ==================== الترويسة المدمجة الأنيقة (Compact Glass Banner) ==================== -->
+  <header class="compact-header">
+    <div class="container">
+      <div class="banner-bar glass-panel">
+        
+        <!-- يمين البانر: الشعار + الاسم + شارة شرورة المدمجة -->
+        <div class="banner-brand" id="goHomeBrandBtn" title="العودة للرئيسية">
+          <div class="mini-logo">
+            <img id="platformLogoImg" src="" alt="شعار نفال" class="hidden">
+            <i id="platformLogoIcon" class="ri-cup-line"></i>
+          </div>
+          <div class="banner-titles">
+            <div class="banner-name-row">
+              <h1 id="platformTitle">سوق نفال</h1>
+              <span class="sharorah-chip">
+                <i class="ri-map-pin-2-fill"></i>
+                <span id="platformBannerText">شرورة فقط</span>
+              </span>
+            </div>
+            <p id="platformSlogan">ارحبوا.. كل متاجر وأسر شرورة بين يديك</p>
+          </div>
+        </div>
+
+        <!-- يسار البانر: محرك البحث الفوري الأنيق -->
+        <div class="banner-search-wrap">
+          <div class="search-pill glass-inset">
+            <i class="ri-search-2-line"></i>
+            <input type="text" id="globalSearchInput" placeholder="وش بخاطرك اليوم؟ ابحث عن قهوة، حلى، عسل أو اسم محل...">
+            <button type="button" id="clearSearchBtn" class="clear-search-btn hidden" aria-label="مسح البحث">
+              <i class="ri-close-circle-fill"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== المحتوى الرئيسي للمنصة ==================== -->
+  <main class="container main-stage">
+
+    <!-- 1. واجهة السوق الشعبي الرئيسية (تعرض المتاجر + أحدث المنتجات) -->
+    <div id="marketplaceView">
+
+      <!-- قسم دكاكين ومتاجر شرورة (يمكن إخفاؤه أو إظهاره من الإدارة العليا) -->
+      <section id="storesDirectorySection" class="market-section">
+        <div class="section-bar">
+          <div class="sec-heading">
+            <i class="ri-store-3-fill"></i>
+            <div>
+              <h2>دكاكين ومتاجر شرورة</h2>
+              <p>اختر المحل اللي يعجبك وتصفح بضاعته واطلب منه مباشرة</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- شريط تصنيفات المتاجر في السوق -->
+        <div id="marketCategoriesBar" class="pills-scroll-bar glass-panel">
+          <button type="button" class="cat-pill active" data-mcat="all">
+            <i class="ri-apps-2-line"></i>
+            <span>كل المتاجر</span>
+          </button>
+        </div>
+
+        <!-- شبكة المتاجر المسجلة -->
+        <div id="storesGrid" class="stores-grid">
+          <div class="loading-box glass-panel">
+            <i class="ri-loader-4-line spin-icon"></i>
+            <span>جاري فتح دكاكين ومتاجر شرورة...</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- قسم أحدث المنتجات والبكجات من كل المتاجر -->
+      <section class="market-section" style="margin-top: 28px;">
+        <div class="section-bar">
+          <div class="sec-heading">
+            <i class="ri-fire-fill"></i>
+            <div>
+              <h2 id="allProductsSectionTitle">أحدث المنتجات وبكجات التوفير</h2>
+              <p>تصفح وأضف لسلتك مباشرة — كل محل ينحفظ في سلة مستقلة داخل عرباتك</p>
+            </div>
+          </div>
+
+          <div class="quick-type-filter">
+            <button type="button" class="mini-filter-btn active" data-ptype="all">الكل</button>
+            <button type="button" class="mini-filter-btn" data-ptype="bundle">🔥 البكجات والعروض</button>
+          </div>
+        </div>
+
+        <!-- شبكة المنتجات (4 بالكمبيوتر و 2 بالجوال) -->
+        <div id="marketProductsGrid" class="products-grid"></div>
+      </section>
+
+    </div>
+
+    <!-- ==================== 2. واجهة المتجر الفردي (عند دخول الزبون لمحل معين) ==================== -->
+    <div id="singleStoreView" class="hidden">
+
+      <!-- شريط الرجوع للسوق ومشاركة رابط المتجر -->
+      <div class="sub-nav-row">
+        <button type="button" id="backToMarketBtn" class="btn-glass-sm">
+          <i class="ri-arrow-right-line"></i>
+          <span>الرجوع لسوق شرورة</span>
+        </button>
+
+        <div class="sub-nav-actions">
+          <button type="button" id="rateStoreBtn" class="btn-glass-sm">
+            <i class="ri-star-smile-line"></i>
+            <span>قيّم المحل</span>
+          </button>
+          <button type="button" id="shareStoreBtn" class="btn-glass-sm">
+            <i class="ri-share-forward-line"></i>
+            <span>مشاركة رابط المحل</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- بانر المتجر المدمج والأنيق -->
+      <div class="store-banner-card glass-panel">
+        <div class="store-banner-top">
+          <div class="store-Identity">
+            <div class="store-avatar">
+              <img id="stViewLogoImg" src="" alt="شعار المتجر" class="hidden">
+              <i id="stViewLogoIcon" class="ri-store-2-line"></i>
+            </div>
+            <div class="store-meta">
+              <div class="store-name-line">
+                <h2 id="stViewName">اسم المتجر</h2>
+                <span id="stViewRatingBadge" class="rating-chip">5.0 ★</span>
+                <span id="stViewWorkBadge" class="work-status-chip open">مفتوح الحين</span>
+              </div>
+              <p id="stViewDesc">وصف المتجر التعريفي</p>
+              <div class="store-mini-tags">
+                <span id="stViewHoursText"><i class="ri-time-line"></i> مفتوح 24 ساعة</span>
+                <span id="stViewMinOrderText"><i class="ri-shopping-basket-line"></i> بدون حد أدنى</span>
+                <span id="stViewDeliveryText"><i class="ri-e-bike-2-line"></i> التوصيل: 15 ريال</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- أزرار التواصل وموقع المحل على الواقع -->
+          <div class="store-social-bar">
+            <a id="stViewMapsLink" href="#" target="_blank" class="store-action-chip map-chip hidden">
+              <i class="ri-map-pin-2-fill"></i>
+              <span>زورنا بالمحل</span>
+            </a>
+            <a id="stViewSnapLink" href="#" target="_blank" class="store-icon-link hidden" title="سناب شات">
+              <i class="ri-snapchat-line"></i>
+            </a>
+            <a id="stViewTiktokLink" href="#" target="_blank" class="store-icon-link hidden" title="تيك توك">
+              <i class="ri-tiktok-line"></i>
+            </a>
+            <a id="stViewInstaLink" href="#" target="_blank" class="store-icon-link hidden" title="إنستغرام">
+              <i class="ri-instagram-line"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- شريط عروض التوصيل الخاص بهذا المتجر -->
+        <div id="stViewPromoStrip" class="slim-promo glass-inset">
+          <i class="ri-sparkling-2-fill"></i>
+          <span id="stViewPromoText"></span>
+        </div>
+
+        <!-- تنبيه إذا كان المحل مقفل حالياً أو تحت الصيانة -->
+        <div id="stViewStateNotice" class="store-state-notice hidden"></div>
+      </div>
+
+      <!-- أقسام المتجر الداخلية -->
+      <div id="stViewCategoriesBar" class="pills-scroll-bar glass-panel" style="margin-top: 16px;"></div>
+
+      <!-- منتجات المتجر (شبكي 2 بالجوال و 4 بالكمبيوتر) -->
+      <div id="stViewProductsGrid" class="products-grid" style="margin-top: 16px;"></div>
+
+    </div>
+
+    <!-- ==================== 3. صفحة المنتج المستقلة (لدعم فهرسة قوقل والروابط المباشرة) ==================== -->
+    <div id="singleProductPageView" class="hidden">
+      <div class="sub-nav-row">
+        <button type="button" id="backFromProductBtn" class="btn-glass-sm">
+          <i class="ri-arrow-right-line"></i>
+          <span>رجوع</span>
+        </button>
+
+        <div class="sub-nav-actions">
+          <button type="button" id="goToProductStoreBtn" class="btn-glass-sm">
+            <i class="ri-store-2-line"></i>
+            <span id="prodPageStoreBtnName">زيارة المتجر</span>
+          </button>
+          <button type="button" id="shareProductUrlBtn" class="btn-glass-sm">
+            <i class="ri-share-line"></i>
+            <span>نسخ رابط المنتج</span>
+          </button>
+        </div>
+      </div>
+
+      <article class="product-page-card glass-panel">
+        <div class="detail-body">
+          <!-- معرض صور المنتج (حتى 4 صور) -->
+          <div class="detail-gallery">
+            <div class="main-img-stage glass-inset">
+              <img id="prodPageMainImg" src="" alt="صورة المنتج">
+              <span id="prodPageBundleBadge" class="badge-bundle hidden">🔥 بكج توفير</span>
+              <span id="prodPageFreeBadge" class="badge-free-delivery hidden"><i class="ri-truck-line"></i> توصيل مجاني</span>
+              <span id="prodPageCategoryBadge" class="badge-category"></span>
+            </div>
+            <div id="prodPageThumbnails" class="thumbnails-row hidden"></div>
+          </div>
+
+          <!-- بيانات وتفاصيل المنتج الكاملة -->
+          <div class="detail-info-col">
+            <div class="prod-store-link-box" id="prodPageStoreBanner">
+              <i class="ri-store-3-line"></i>
+              <span>يباع لدى: <strong id="prodPageStoreName"></strong></span>
+              <i class="ri-arrow-left-s-line"></i>
+            </div>
+
+            <div class="detail-title-price">
+              <h2 id="prodPageTitle"></h2>
+              <div class="detail-price-box">
+                <span id="prodPagePrice">0</span> <small>ريال</small>
+                <del id="prodPageOldPrice" class="hidden"></del>
+              </div>
+            </div>
+
+            <div id="prodPageStockStatus" class="stock-pill"></div>
+
+            <!-- المواصفات (الوزن، الإيحاءات/المكونات) -->
+            <div id="prodPageSpecsGrid" class="specs-grid hidden"></div>
+
+            <!-- الوصف الكامل -->
+            <div class="detail-desc-box glass-inset">
+              <h4><i class="ri-file-text-line"></i> التفاصيل والوصف الكامل</h4>
+              <p id="prodPageFullDesc"></p>
+            </div>
+
+            <!-- أزرار الكمية والإضافة لسلة المتجر -->
+            <div class="detail-actions-bar">
+              <div class="detail-qty-selector glass-inset">
+                <button type="button" id="prodPageQtyMinus" class="qty-btn"><i class="ri-subtract-line"></i></button>
+                <strong id="prodPageQtyVal">1</strong>
+                <button type="button" id="prodPageQtyPlus" class="qty-btn"><i class="ri-add-line"></i></button>
+              </div>
+
+              <button type="button" id="prodPageAddToCartBtn" class="btn-detail-add">
+                <i class="ri-shopping-bag-3-fill"></i>
+                <span id="prodPageAddBtnText">أضف لسلة المتجر</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+  </main>
+
+  <!-- ==================== الفوتر البسيط والأنيق ==================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-glass glass-panel">
+        <div class="footer-brand">
+          <h3 id="footerName">سوق نفال — شرورة</h3>
+          <p>منصة المتاجر المحلية والأسر المنتجة في شرورة — كل طلب يوصلك مباشرة من صاحب المحل</p>
+        </div>
+        <div class="footer-meta">
+          <span class="sharorah-chip"><i class="ri-shield-check-line"></i> جودة محلية مضمونة</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== الشريط العائم السفلي بأسلوب أبل (Floating Bottom Dock) ==================== -->
+  <div class="floating-dock-wrapper">
+    <nav class="floating-dock glass-pill">
+      <button type="button" id="dockHomeBtn" class="dock-btn active">
+        <i class="ri-compass-3-line"></i>
+        <span>السوق</span>
+      </button>
+
+      <div class="dock-divider"></div>
+
+      <button type="button" id="dockOrdersBtn" class="dock-btn">
+        <i class="ri-file-list-3-line"></i>
+        <span>فواتيري</span>
+      </button>
+
+      <div class="dock-divider"></div>
+
+      <button type="button" id="dockCartsBtn" class="dock-cart-btn">
+        <div class="dock-cart-right">
+          <i class="ri-shopping-basket-2-fill"></i>
+          <span>عرباتي</span>
+          <span id="totalCartsItemsBadge" class="dock-badge">0</span>
+        </div>
+        <div class="dock-cart-total">
+          <span id="totalCartsStoresCount">0</span> <small>محل</small>
+        </div>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ==================== نافذة "عرباتي" (نظام السلات المتعددة لكل محل) ==================== -->
+  <div id="multiCartsModal" class="modal-overlay hidden">
+    <div class="modal-card glass-modal">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="ri-shopping-basket-2-line"></i>
+          <h2 id="cartsModalTitle">عرباتي (سلات المحلات)</h2>
+        </div>
+        <button type="button" id="closeCartsModalBtn" class="icon-close-btn" aria-label="إغلاق">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- المرحلة 1: قائمة سلات المحلات التي أضاف العميل منها منتجات -->
+        <div id="cartsListView">
+          <p class="hint-text" style="margin-bottom: 12px;">
+            كل محل تضيف منه منتجات ينحفظ في سلة مستقلة باسمه. اضغط على سلة المحل اللي تبي تأكد طلبك منه الحين:
+          </p>
+          <div id="storeCartsCardsContainer" class="store-carts-grid"></div>
+        </div>
+
+        <!-- المرحلة 2: تفاصيل سلة محل معين وإتمام الطلب منه -->
+        <div id="activeStoreCartCheckoutView" class="hidden">
+          <button type="button" id="backToCartsListBtn" class="btn-glass-sm" style="margin-bottom: 12px;">
+            <i class="ri-arrow-right-line"></i>
+            <span>الرجوع لكل عرباتي</span>
+          </button>
+
+          <!-- هيدر المحل المختار داخل السلة -->
+          <div id="checkoutStoreHeader" class="cart-store-header glass-inset"></div>
+
+          <!-- شريط عروض التوصيل أو تنبيه الإغلاق / الحد الأدنى لهذا المحل -->
+          <div id="checkoutSmartHint" class="smart-hint glass-inset"></div>
+
+          <!-- عناصر السلة لهذا المحل -->
+          <div id="checkoutCartItemsList" class="cart-items"></div>
+
+          <!-- ملخص الحساب -->
+          <div class="cart-summary glass-inset">
+            <div class="summary-row">
+              <span>قيمة المنتجات</span>
+              <span><strong id="chkSubtotal">0</strong> ريال</span>
+            </div>
+            <div class="summary-row">
+              <span>رسوم توصيل المحل (شرورة)</span>
+              <span><strong id="chkDelivery">0</strong> ريال</span>
+            </div>
+            <div class="summary-row total-row">
+              <span>الإجمالي النهائي</span>
+              <span><strong id="chkTotal">0</strong> ريال</span>
+            </div>
+          </div>
+
+          <!-- تنبيه إذا كان المحل مغلق حالياً أو لم يصل للحد الأدنى -->
+          <div id="checkoutBlockerNotice" class="blocker-notice hidden"></div>
+
+          <!-- نموذج بيانات الزبون وإرسال الطلب لواتساب التاجر -->
+          <form id="checkoutForm" class="checkout-form">
+            <div class="section-heading">
+              <i class="ri-user-location-line"></i>
+              <h3>بياناتك للتوصيل داخل شرورة</h3>
+            </div>
+
+            <div class="form-group">
+              <label>اسمك الكريم *</label>
+              <div class="input-glass-wrap">
+                <i class="ri-user-3-line"></i>
+                <input type="text" id="custName" placeholder="اكتب اسمك أو اللقب" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>رقم جوالك (واتساب) *</label>
+              <div class="input-glass-wrap">
+                <i class="ri-smartphone-line"></i>
+                <input type="tel" id="custPhone" placeholder="05XXXXXXXX" dir="ltr" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>موقعك بالـ GPS (عشان يوصلك المندوب بسرعة) *</label>
+              <div class="gps-row">
+                <button type="button" id="getGpsBtn" class="btn-gps">
+                  <i class="ri-compass-3-line"></i>
+                  <span>حدد موقعي بالـ GPS</span>
+                </button>
+                <div class="input-glass-wrap flex-1">
+                  <i class="ri-map-pin-2-line"></i>
+                  <input type="text" id="custGpsUrl" placeholder="رابط موقعك بيظهر هنا تلقائياً" readonly required>
+                </div>
+              </div>
+              <small id="gpsStatusText" class="hint-text">اضغط الزر لتحديد موقعك الجغرافي بدقة في شرورة</small>
+            </div>
+
+            <div class="form-group">
+              <label>الحي / وصف البيت أو ملاحظة لصاحب المحل</label>
+              <div class="input-glass-wrap">
+                <i class="ri-home-4-line"></i>
+                <input type="text" id="custAddress" placeholder="مثال: حي الخالدية - جنب مسجد...">
+              </div>
+            </div>
+
+            <button type="submit" id="submitOrderBtn" class="btn-submit-order">
+              <i class="ri-whatsapp-line"></i>
+              <span id="submitOrderBtnText">أكد طلبك وأرسله لواتساب المحل</span>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== نافذة "فواتيري" ومتابعة الطلبات ورقم المندوب ==================== -->
+  <div id="ordersModal" class="modal-overlay hidden">
+    <div class="modal-card glass-modal">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="ri-file-list-3-line"></i>
+          <h2>فواتيري ومتابعة الطلبات</h2>
+        </div>
+        <button type="button" id="closeOrdersBtn" class="icon-close-btn" aria-label="إغلاق">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="track-search-box">
+          <div class="input-glass-wrap flex-1">
+            <i class="ri-hashtag"></i>
+            <input type="text" id="searchInvoiceInput" placeholder="ابحث برقم الفاتورة (مثال: NF-2610-A9F2)" dir="ltr">
+          </div>
+          <button type="button" id="searchInvoiceBtn" class="btn-search">
+            <i class="ri-search-2-line"></i>
+            <span>بحث</span>
+          </button>
+        </div>
+
+        <p class="hint-text">اضغط على أي فاتورة لفتحها ومتابعة حالة طلبك ومعرفة رقم المندوب:</p>
+
+        <div id="customerOrdersList" class="customer-orders-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== نافذة تقييم المتجر بالنجوم ==================== -->
+  <div id="ratingModal" class="modal-overlay hidden">
+    <div class="modal-card glass-modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="ri-star-smile-line"></i>
+          <h2 id="ratingModalTitle">قيّم تجربتك مع المحل</h2>
+        </div>
+        <button type="button" id="closeRatingModalBtn" class="icon-close-btn">&times;</button>
+      </div>
+      <div class="modal-body" style="align-items:center; text-align:center;">
+        <p class="hint-text">تقييمك يساعد أهل شرورة في اختيار أفضل المتاجر:</p>
+        <div id="starsSelector" class="stars-selector">
+          <button type="button" data-star="1">★</button>
+          <button type="button" data-star="2">★</button>
+          <button type="button" data-star="3">★</button>
+          <button type="button" data-star="4">★</button>
+          <button type="button" data-star="5" class="active">★</button>
+        </div>
+        <button type="button" id="submitRatingBtn" class="btn-detail-add" style="width:100%;">
+          <i class="ri-check-double-line"></i>
+          <span>إرسال التقييم</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- إشعار عائم زجاجي -->
+  <div id="toast" class="toast glass-pill hidden">
+    <i class="ri-checkbox-circle-fill"></i>
+    <span id="toastText">تمت الإضافة</span>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
