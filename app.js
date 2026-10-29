@@ -28,12 +28,13 @@ if (getApps().length === 0) {
 }
 
 const DEFAULT_COFFEE_IMG = "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=800&q=80";
+const DEFAULT_FAVICON = "https://cdn-icons-png.flaticon.com/512/924/924514.png";
 
 // متغيرات المنصة والبيانات الحية
 let marketConfig = {
   showMarketplace: true,
-  platformName: "سوق نفال — شرورة",
-  platformSlogan: "ارحبوا في سوق نفال.. كل متاجر وأسر شرورة بين يديك!",
+  platformName: "سوق نفال",
+  platformSlogan: "ارحبوا.. متاجر شرورة بين يديك",
   platformBanner: "التوصيل والخدمة مخصصة لأهلنا داخل شرورة فقط",
   platformLogo: "",
   marketCategories: ["متاجر القهوة والمحامص", "الأسر المنتجة والحلى", "العسل والسمن والتمور", "العطور والبخور", "متاجر متنوعة"]
@@ -47,15 +48,15 @@ let selectedMarketCat = "all";
 let selectedProductType = "all";
 let searchQueryText = "";
 
-// حالة العرض الحالية (السوق، متجر معين، أو صفحة منتج مستقلة)
+// حالة الصفحة المفتوحة حالياً (SPA Routing)
+let currentViewName = "market"; // 'market' | 'search' | 'hub' | 'store' | 'product'
 let activeStoreId = null;
 let activeStoreInternalCat = "all";
 let activeProductId = null;
 let activeProductQty = 1;
 let selectedRatingStars = 5;
 
-// نظام "عرباتي" (سلة مستقلة لكل متجر يطلب منه الزبون)
-// الهيكل: { [storeId]: { storeId, items: [ { id, name, price, qty, maxStock, freeDelivery } ] } }
+// نظام "سلتي وطلباتي" (سلة مستقلة لكل متجر + فواتير الزبون)
 let multiCarts = JSON.parse(localStorage.getItem("nafal_multi_carts") || "{}");
 let activeCheckoutStoreId = null;
 let savedInvoices = JSON.parse(localStorage.getItem("nafal_my_invoices") || "[]");
@@ -64,20 +65,33 @@ function showToast(msg) {
   const toast = document.getElementById("toast");
   document.getElementById("toastText").textContent = msg;
   toast.classList.remove("hidden");
-  setTimeout(() => toast.classList.add("hidden"), 3000);
+  setTimeout(() => toast.classList.add("hidden"), 2800);
 }
 
-// 2. تحديث بيانات محركات البحث (Google SEO & Schema.org) والروابط العميقة
-function updateSeoMeta({ title, description, type = "WebSite", image = "", price = null, storeName = "" }) {
-  document.title = title;
-  const metaTitle = document.getElementById("pageMetaTitle");
-  const metaDesc = document.getElementById("pageMetaDesc");
-  const ogTitle = document.getElementById("ogMetaTitle");
-  const ogDesc = document.getElementById("ogMetaDesc");
-  if (metaTitle) metaTitle.textContent = title;
-  if (metaDesc) metaDesc.setAttribute("content", description);
-  if (ogTitle) ogTitle.setAttribute("content", title);
-  if (ogDesc) ogDesc.setAttribute("content", description);
+// 2. تحديث أيقونة قوقل (Favicon) وصور المشاركة في واتساب وتويتر (OpenGraph) وبيانات SEO
+function updateSeoAndShareMeta({ title, description, image = "", type = "WebSite", price = null, storeName = "" }) {
+  const finalTitle = title || `${marketConfig.platformName} — شرورة`;
+  const finalDesc = description || marketConfig.platformSlogan;
+  const finalImg = image || marketConfig.platformLogo || DEFAULT_COFFEE_IMG;
+  const finalIcon = image || marketConfig.platformLogo || DEFAULT_FAVICON;
+
+  document.title = finalTitle;
+
+  const setAttr = (id, attr, val) => {
+    const el = document.getElementById(id);
+    if (el) el.setAttribute(attr, val);
+  };
+
+  const titleEl = document.getElementById("pageMetaTitle");
+  if (titleEl) titleEl.textContent = finalTitle;
+
+  setAttr("pageMetaDesc", "content", finalDesc);
+  setAttr("ogMetaTitle", "content", finalTitle);
+  setAttr("ogMetaDesc", "content", finalDesc);
+  setAttr("ogMetaImage", "content", finalImg);
+  setAttr("twitterMetaImage", "content", finalImg);
+  setAttr("dynamicFavicon", "href", finalIcon);
+  setAttr("dynamicAppleIcon", "href", finalIcon);
 
   const schemaEl = document.getElementById("seoJsonLd");
   if (!schemaEl) return;
@@ -85,8 +99,9 @@ function updateSeoMeta({ title, description, type = "WebSite", image = "", price
   let schemaObj = {
     "@context": "https://schema.org",
     "@type": type,
-    "name": title,
-    "description": description,
+    "name": finalTitle,
+    "description": finalDesc,
+    "image": finalImg,
     "url": window.location.href
   };
 
@@ -94,10 +109,10 @@ function updateSeoMeta({ title, description, type = "WebSite", image = "", price
     schemaObj = {
       "@context": "https://schema.org/",
       "@type": "Product",
-      "name": title,
-      "image": image ? [image] : [],
-      "description": description,
-      "brand": { "@type": "Brand", "name": storeName || "سوق نفال شرورة" },
+      "name": finalTitle,
+      "image": [finalImg],
+      "description": finalDesc,
+      "brand": { "@type": "Brand", "name": storeName || marketConfig.platformName },
       "offers": {
         "@type": "Offer",
         "priceCurrency": "SAR",
@@ -110,9 +125,9 @@ function updateSeoMeta({ title, description, type = "WebSite", image = "", price
     schemaObj = {
       "@context": "https://schema.org",
       "@type": "Store",
-      "name": title,
-      "description": description,
-      "image": image || undefined,
+      "name": finalTitle,
+      "description": finalDesc,
+      "image": finalImg,
       "address": { "@type": "PostalAddress", "addressLocality": "شرورة", "addressCountry": "SA" }
     };
   }
@@ -120,7 +135,7 @@ function updateSeoMeta({ title, description, type = "WebSite", image = "", price
   schemaEl.textContent = JSON.stringify(schemaObj);
 }
 
-// 3. دوال فحص حالة المتجر (الصيانة / الاشتراك / ساعات الدوام)
+// 3. فحص حالة المتجر (الصيانة / الاشتراك / ساعات الدوام)
 function isStoreUnderMaintenance(store) {
   if (!store) return true;
   if (store.storeStatus === "maintenance") return true;
@@ -133,7 +148,7 @@ function checkStoreWorkState(store) {
   if (isStoreUnderMaintenance(store)) {
     return {
       canOrder: false,
-      badgeText: "تحت الصيانة حالياً",
+      badgeText: "تحت الصيانة",
       badgeClass: "maint",
       hoursLabel: "المحل تحت الصيانة حالياً",
       reasonMsg: "هذا المحل تحت الصيانة حالياً يا غالي، سلتك محفوظة وتقدر تطلب أول ما يرجع للعمل!"
@@ -161,7 +176,6 @@ function checkStoreWorkState(store) {
     };
   }
 
-  // فحص جدول ساعات الدوام تلقائياً
   const openStr = store.openTime || "08:00";
   const closeStr = store.closeTime || "23:30";
   const now = new Date();
@@ -176,7 +190,6 @@ function checkStoreWorkState(store) {
   if (closeTotal >= openTotal) {
     isOpenNow = currentMinutes >= openTotal && currentMinutes <= closeTotal;
   } else {
-    // دوام يمتد لبعد منتصف الليل
     isOpenNow = currentMinutes >= openTotal || currentMinutes <= closeTotal;
   }
 
@@ -217,7 +230,7 @@ function getProductImages(prod) {
   return list;
 }
 
-// 4. الاستماع المباشر لإعدادات المنصة، المتاجر، والمنتجات
+// 4. الاستماع المباشر للبيانات من فايربيس
 function initRealtimeListeners() {
   onSnapshot(doc(db, "nafal_platform", "marketConfig"), snap => {
     if (snap.exists()) {
@@ -230,21 +243,21 @@ function initRealtimeListeners() {
     allStores = [];
     snap.forEach(d => allStores.push({ id: d.id, ...d.data() }));
     allStores.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    refreshCurrentViews();
+    refreshAllUI();
   });
 
   onSnapshot(collection(db, "nafal_products"), snap => {
     allProducts = [];
     snap.forEach(d => allProducts.push({ id: d.id, ...d.data() }));
     allProducts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    refreshCurrentViews();
+    refreshAllUI();
   });
 }
 
 function applyPlatformSettings() {
   document.getElementById("platformTitle").textContent = marketConfig.platformName || "سوق نفال";
   document.getElementById("platformSlogan").textContent = marketConfig.platformSlogan || "";
-  document.getElementById("platformBannerText").textContent = marketConfig.platformBanner || "شرورة فقط";
+  document.getElementById("platformBannerText").textContent = marketConfig.platformBanner || "التوصيل والخدمة مخصصة لأهلنا داخل شرورة فقط";
   document.getElementById("footerName").textContent = marketConfig.platformName || "سوق نفال — شرورة";
 
   const logoImg = document.getElementById("platformLogoImg");
@@ -258,7 +271,6 @@ function applyPlatformSettings() {
     logoIcon.classList.remove("hidden");
   }
 
-  // إظهار أو إخفاء قسم المتاجر بناءً على قرار الإدارة العليا
   const storesDir = document.getElementById("storesDirectorySection");
   if (marketConfig.showMarketplace === false) {
     storesDir.classList.add("hidden");
@@ -267,8 +279,123 @@ function applyPlatformSettings() {
   }
 
   renderMarketCategoryPills();
+
+  if (currentViewName === "market") {
+    updateSeoAndShareMeta({
+      title: `${marketConfig.platformName} — شرورة`,
+      description: marketConfig.platformSlogan,
+      image: marketConfig.platformLogo,
+      type: "WebSite"
+    });
+  }
 }
 
+// 5. نظام التنقل السلس بين الصفحات الكاملة (SPA Navigation)
+function switchSpaView(viewName, pushUrl = null) {
+  currentViewName = viewName;
+
+  // إخفاء جميع الصفحات
+  document.querySelectorAll(".spa-view").forEach(v => v.classList.add("hidden"));
+
+  // تحديث حالة أزرار الشريط السفلي
+  document.getElementById("dockMarketBtn").classList.toggle("active", viewName === "market" || viewName === "store" || viewName === "product");
+  document.getElementById("dockSearchBtn").classList.toggle("active", viewName === "search");
+  document.getElementById("dockHubBtn").classList.toggle("active", viewName === "hub");
+
+  // زر الرجوع السريع في الترويسة العلوية
+  const topBackBtn = document.getElementById("topQuickBackBtn");
+  if (viewName === "market") {
+    topBackBtn.classList.add("hidden");
+  } else {
+    topBackBtn.classList.remove("hidden");
+  }
+
+  if (viewName === "market") {
+    activeStoreId = null;
+    activeProductId = null;
+    document.getElementById("marketplaceView").classList.remove("hidden");
+    updateSeoAndShareMeta({
+      title: `${marketConfig.platformName} — شرورة`,
+      description: marketConfig.platformSlogan,
+      image: marketConfig.platformLogo,
+      type: "WebSite"
+    });
+  } else if (viewName === "search") {
+    document.getElementById("searchView").classList.remove("hidden");
+    renderSearchPageResults();
+    setTimeout(() => document.getElementById("globalSearchInput").focus(), 100);
+  } else if (viewName === "hub") {
+    document.getElementById("ordersAndCartsView").classList.remove("hidden");
+    renderCartsListView();
+    listenToCustomerInvoices();
+  } else if (viewName === "store") {
+    document.getElementById("singleStoreView").classList.remove("hidden");
+  } else if (viewName === "product") {
+    document.getElementById("singleProductPageView").classList.remove("hidden");
+  }
+
+  if (pushUrl !== null) {
+    window.history.pushState({}, "", pushUrl);
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function handleUrlRouting() {
+  const params = new URLSearchParams(window.location.search);
+  const prodParam = params.get("product");
+  const storeParam = params.get("store");
+  const viewParam = params.get("view");
+
+  if (prodParam) {
+    openProductPage(prodParam, false);
+  } else if (storeParam) {
+    openSingleStore(storeParam, false);
+  } else if (viewParam === "search") {
+    switchSpaView("search", null);
+  } else if (viewParam === "hub") {
+    switchSpaView("hub", null);
+  } else {
+    switchSpaView("market", null);
+  }
+}
+
+window.addEventListener("popstate", handleUrlRouting);
+
+// أزرار الشريط السفلي والترويسة
+document.getElementById("goHomeBrandBtn").addEventListener("click", () => switchSpaView("market", window.location.pathname));
+document.getElementById("topQuickBackBtn").addEventListener("click", () => {
+  if (currentViewName === "product" && activeStoreId) {
+    openSingleStore(activeStoreId, true);
+  } else {
+    switchSpaView("market", window.location.pathname);
+  }
+});
+
+document.getElementById("dockMarketBtn").addEventListener("click", () => switchSpaView("market", window.location.pathname));
+document.getElementById("dockSearchBtn").addEventListener("click", () => switchSpaView("search", "?view=search"));
+document.getElementById("dockHubBtn").addEventListener("click", () => switchSpaView("hub", "?view=hub"));
+
+function refreshAllUI() {
+  renderMarketplaceStores();
+  renderMarketplaceProducts();
+
+  if (currentViewName === "search") {
+    renderSearchPageResults();
+  }
+
+  if (activeProductId) {
+    const prod = allProducts.find(p => p.id === activeProductId);
+    if (prod) populateProductPageUI(prod);
+  } else if (activeStoreId) {
+    const st = allStores.find(s => s.id === activeStoreId);
+    if (st) populateSingleStoreUI(st);
+  }
+
+  updateMultiCartsBadges();
+}
+
+// 6. عرض المتاجر والمنتجات في الصفحة الرئيسية
 function renderMarketCategoryPills() {
   const bar = document.getElementById("marketCategoriesBar");
   bar.innerHTML = `
@@ -295,185 +422,55 @@ function renderMarketCategoryPills() {
   });
 }
 
-// 5. التوجيه الذكي بين الواجهات والروابط (Routing)
-function handleUrlRouting() {
-  const params = new URLSearchParams(window.location.search);
-  const prodParam = params.get("product");
-  const storeParam = params.get("store");
+function createStoreCardElement(st) {
+  const workState = checkStoreWorkState(st);
+  const prodCount = allProducts.filter(p => p.storeId === st.id).length;
 
-  if (prodParam) {
-    openProductPage(prodParam, false);
-  } else if (storeParam) {
-    openSingleStore(storeParam, false);
-  } else {
-    showMarketplaceHome(false);
-  }
+  const card = document.createElement("div");
+  card.className = "store-card";
+  card.innerHTML = `
+    <div class="store-card-head">
+      <div class="store-card-logo">
+        ${st.logo ? `<img src="${st.logo}" alt="${st.name}">` : `<i class="ri-store-2-line"></i>`}
+      </div>
+      <div class="store-card-info">
+        <div class="store-card-title-row">
+          <h3 class="store-card-title">${st.name}</h3>
+          <span class="rating-chip">${getStoreRatingText(st)}</span>
+        </div>
+        <p class="store-card-desc">${st.description || st.marketCategory || "متجر محلي في شرورة"}</p>
+      </div>
+    </div>
+
+    <div class="store-card-footer">
+      <span><i class="ri-shopping-bag-3-line"></i> ${prodCount} منتج | التوصيل: ${st.baseDeliveryFee ?? 15} ريال</span>
+      <span class="work-status-chip ${workState.badgeClass}">${workState.badgeText}</span>
+    </div>
+  `;
+
+  card.addEventListener("click", () => openSingleStore(st.id, true));
+  return card;
 }
 
-window.addEventListener("popstate", handleUrlRouting);
-
-function refreshCurrentViews() {
-  renderMarketplaceStores();
-  renderMarketplaceProducts();
-
-  if (activeProductId) {
-    const prod = allProducts.find(p => p.id === activeProductId);
-    if (prod) populateProductPageUI(prod);
-  } else if (activeStoreId) {
-    const st = allStores.find(s => s.id === activeStoreId);
-    if (st) populateSingleStoreUI(st);
-  }
-
-  updateMultiCartsDockUI();
-}
-
-function showMarketplaceHome(pushHistory = true) {
-  activeStoreId = null;
-  activeProductId = null;
-
-  document.getElementById("marketplaceView").classList.remove("hidden");
-  document.getElementById("singleStoreView").classList.add("hidden");
-  document.getElementById("singleProductPageView").classList.add("hidden");
-
-  if (pushHistory) {
-    window.history.pushState({}, "", window.location.pathname);
-  }
-
-  updateSeoMeta({
-    title: `${marketConfig.platformName} | متاجر وأسر شرورة بين يديك`,
-    description: marketConfig.platformSlogan,
-    type: "WebSite"
-  });
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-document.getElementById("goHomeBrandBtn").addEventListener("click", () => showMarketplaceHome(true));
-document.getElementById("dockHomeBtn").addEventListener("click", () => showMarketplaceHome(true));
-document.getElementById("backToMarketBtn").addEventListener("click", () => showMarketplaceHome(true));
-
-// 6. عرض المتاجر والمنتجات في السوق الشعبي الرئيسي
 function renderMarketplaceStores() {
   const grid = document.getElementById("storesGrid");
   grid.innerHTML = "";
 
-  const q = searchQueryText.trim().toLowerCase();
-  const filteredStores = allStores.filter(st => {
-    const matchCat = selectedMarketCat === "all" || st.marketCategory === selectedMarketCat;
-    const matchSearch = !q || (st.name || "").toLowerCase().includes(q) || (st.description || "").toLowerCase().includes(q);
-    return matchCat && matchSearch;
-  });
+  const filtered = allStores.filter(st => selectedMarketCat === "all" || st.marketCategory === selectedMarketCat);
 
-  if (filteredStores.length === 0) {
+  if (filtered.length === 0) {
     grid.innerHTML = `
       <div class="loading-box glass-panel">
         <i class="ri-store-2-line"></i>
-        <span>ما لقينا متاجر مطابقة لبحثك حالياً</span>
+        <span>لا توجد متاجر في هذا القسم حالياً</span>
       </div>
     `;
     return;
   }
 
-  filteredStores.forEach(st => {
-    const workState = checkStoreWorkState(st);
-    const prodCount = allProducts.filter(p => p.storeId === st.id).length;
-
-    const card = document.createElement("div");
-    card.className = "store-card";
-    card.innerHTML = `
-      <div class="store-card-head">
-        <div class="store-card-logo">
-          ${st.logo ? `<img src="${st.logo}" alt="${st.name}">` : `<i class="ri-store-2-line"></i>`}
-        </div>
-        <div class="store-card-info">
-          <div class="store-card-title-row">
-            <h3 class="store-card-title">${st.name}</h3>
-            <span class="rating-chip">${getStoreRatingText(st)}</span>
-          </div>
-          <p class="store-card-desc">${st.description || st.marketCategory || "متجر محلي في شرورة"}</p>
-        </div>
-      </div>
-
-      <div class="store-card-footer">
-        <span><i class="ri-shopping-bag-3-line"></i> ${prodCount} منتج | التوصيل: ${st.baseDeliveryFee ?? 15} ريال</span>
-        <span class="work-status-chip ${workState.badgeClass}">${workState.badgeText}</span>
-      </div>
-    `;
-
-    card.addEventListener("click", () => openSingleStore(st.id, true));
-    grid.appendChild(card);
-  });
+  filtered.forEach(st => grid.appendChild(createStoreCardElement(st)));
 }
 
-function renderMarketplaceProducts() {
-  const grid = document.getElementById("marketProductsGrid");
-  grid.innerHTML = "";
-
-  const q = searchQueryText.trim().toLowerCase();
-  const visibleProducts = allProducts.filter(prod => {
-    const parentStore = allStores.find(s => s.id === prod.storeId);
-    // إخفاء منتجات المتاجر التي تحت الصيانة من الصفحة العامة للسوق
-    if (parentStore && isStoreUnderMaintenance(parentStore)) return false;
-
-    const matchType = selectedProductType === "all" || prod.productType === selectedProductType;
-    const matchSearch = !q || 
-      (prod.name || "").toLowerCase().includes(q) || 
-      (prod.description || "").toLowerCase().includes(q) || 
-      (prod.storeName || "").toLowerCase().includes(q);
-    return matchType && matchSearch;
-  });
-
-  if (visibleProducts.length === 0) {
-    grid.innerHTML = `
-      <div class="loading-box glass-panel">
-        <i class="ri-cup-line"></i>
-        <span>لا توجد منتجات مطابقة حالياً</span>
-      </div>
-    `;
-    return;
-  }
-
-  visibleProducts.forEach(prod => {
-    grid.appendChild(createProductCardElement(prod, true));
-  });
-}
-
-document.querySelectorAll(".quick-type-filter .mini-filter-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".quick-type-filter .mini-filter-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    selectedProductType = btn.dataset.ptype;
-    renderMarketplaceProducts();
-  });
-});
-
-// محرك البحث الفوري
-document.getElementById("globalSearchInput").addEventListener("input", (e) => {
-  searchQueryText = e.target.value;
-  const clearBtn = document.getElementById("clearSearchBtn");
-  if (searchQueryText.trim() !== "") {
-    clearBtn.classList.remove("hidden");
-  } else {
-    clearBtn.classList.add("hidden");
-  }
-
-  if (activeStoreId) {
-    const st = allStores.find(s => s.id === activeStoreId);
-    if (st) renderSingleStoreProducts(st);
-  } else {
-    renderMarketplaceStores();
-    renderMarketplaceProducts();
-  }
-});
-
-document.getElementById("clearSearchBtn").addEventListener("click", () => {
-  document.getElementById("globalSearchInput").value = "";
-  searchQueryText = "";
-  document.getElementById("clearSearchBtn").classList.add("hidden");
-  refreshCurrentViews();
-});
-
-// بناء بطاقة منتج قياسية (شبكي 2 بالجوال و 4 بالكمبيوتر)
 function createProductCardElement(prod, showStoreName = true) {
   const outOfStock = Number(prod.stock) <= 0;
   const images = getProductImages(prod);
@@ -522,25 +519,100 @@ function createProductCardElement(prod, showStoreName = true) {
   return card;
 }
 
-// 7. واجهة المتجر الفردي (Single Store View)
+function renderMarketplaceProducts() {
+  const grid = document.getElementById("marketProductsGrid");
+  grid.innerHTML = "";
+
+  const visibleProducts = allProducts.filter(prod => {
+    const parentStore = allStores.find(s => s.id === prod.storeId);
+    if (parentStore && isStoreUnderMaintenance(parentStore)) return false;
+    return selectedProductType === "all" || prod.productType === selectedProductType;
+  });
+
+  if (visibleProducts.length === 0) {
+    grid.innerHTML = `
+      <div class="loading-box glass-panel">
+        <i class="ri-cup-line"></i>
+        <span>لا توجد منتجات معروضة حالياً</span>
+      </div>
+    `;
+    return;
+  }
+
+  visibleProducts.forEach(prod => grid.appendChild(createProductCardElement(prod, true)));
+}
+
+document.querySelectorAll(".quick-type-filter .mini-filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".quick-type-filter .mini-filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedProductType = btn.dataset.ptype;
+    renderMarketplaceProducts();
+  });
+});
+
+// 7. صفحة البحث المستقلة
+document.getElementById("globalSearchInput").addEventListener("input", (e) => {
+  searchQueryText = e.target.value;
+  document.getElementById("clearSearchBtn").classList.toggle("hidden", searchQueryText.trim() === "");
+  renderSearchPageResults();
+});
+
+document.getElementById("clearSearchBtn").addEventListener("click", () => {
+  document.getElementById("globalSearchInput").value = "";
+  searchQueryText = "";
+  document.getElementById("clearSearchBtn").classList.add("hidden");
+  renderSearchPageResults();
+});
+
+function renderSearchPageResults() {
+  const storesGrid = document.getElementById("searchStoresGrid");
+  const prodsGrid = document.getElementById("searchProductsGrid");
+  storesGrid.innerHTML = "";
+  prodsGrid.innerHTML = "";
+
+  const q = searchQueryText.trim().toLowerCase();
+
+  const matchedStores = allStores.filter(st => {
+    if (!q) return true;
+    return (st.name || "").toLowerCase().includes(q) || 
+           (st.description || "").toLowerCase().includes(q) || 
+           (st.marketCategory || "").toLowerCase().includes(q);
+  });
+
+  const matchedProds = allProducts.filter(p => {
+    const parentStore = allStores.find(s => s.id === p.storeId);
+    if (parentStore && isStoreUnderMaintenance(parentStore)) return false;
+    if (!q) return true;
+    return (p.name || "").toLowerCase().includes(q) || 
+           (p.description || "").toLowerCase().includes(q) || 
+           (p.category || "").toLowerCase().includes(q) || 
+           (p.storeName || "").toLowerCase().includes(q);
+  });
+
+  if (matchedStores.length === 0) {
+    storesGrid.innerHTML = `<div class="loading-box glass-panel"><span>لا توجد محلات مطابقة</span></div>`;
+  } else {
+    matchedStores.forEach(st => storesGrid.appendChild(createStoreCardElement(st)));
+  }
+
+  if (matchedProds.length === 0) {
+    prodsGrid.innerHTML = `<div class="loading-box glass-panel"><span>لا توجد منتجات مطابقة</span></div>`;
+  } else {
+    matchedProds.forEach(p => prodsGrid.appendChild(createProductCardElement(p, true)));
+  }
+}
+
+// 8. صفحة المتجر الفردي (Single Store View)
 function openSingleStore(storeId, pushHistory = true) {
   activeStoreId = storeId;
   activeProductId = null;
   activeStoreInternalCat = "all";
 
-  document.getElementById("marketplaceView").classList.add("hidden");
-  document.getElementById("singleProductPageView").classList.add("hidden");
-  document.getElementById("singleStoreView").classList.remove("hidden");
-
-  if (pushHistory) {
-    window.history.pushState({}, "", `?store=${storeId}`);
-  }
+  switchSpaView("store", pushHistory ? `?store=${storeId}` : null);
 
   const st = allStores.find(s => s.id === storeId);
-  if (st) {
-    populateSingleStoreUI(st);
-  }
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (st) populateSingleStoreUI(st);
 }
 
 function populateSingleStoreUI(st) {
@@ -569,13 +641,11 @@ function populateSingleStoreUI(st) {
     logoIcon.classList.remove("hidden");
   }
 
-  // روابط موقع المحل والتواصل
   toggleElementLink("stViewMapsLink", st.mapsUrl);
   toggleElementLink("stViewSnapLink", st.snapchatUrl);
   toggleElementLink("stViewTiktokLink", st.tiktokUrl);
   toggleElementLink("stViewInstaLink", st.instagramUrl);
 
-  // شريط عروض التوصيل
   const promoStrip = document.getElementById("stViewPromoStrip");
   if (st.promoMessage) {
     document.getElementById("stViewPromoText").textContent = st.promoMessage;
@@ -584,7 +654,6 @@ function populateSingleStoreUI(st) {
     promoStrip.classList.add("hidden");
   }
 
-  // تنبيه إذا كان المحل تحت الصيانة أو مغلق حالياً
   const stateNotice = document.getElementById("stViewStateNotice");
   if (!workState.canOrder) {
     stateNotice.textContent = workState.reasonMsg;
@@ -593,12 +662,12 @@ function populateSingleStoreUI(st) {
     stateNotice.classList.add("hidden");
   }
 
-  // تحديث SEO للمتجر
-  updateSeoMeta({
-    title: `${st.name} | سوق نفال شرورة`,
+  // تحديث صورة المشاركة وأيقونة البحث لشعار هذا المتجر
+  updateSeoAndShareMeta({
+    title: `${st.name} | ${marketConfig.platformName}`,
     description: st.description || `تصفح منتجات ${st.name} واطلب مباشرة داخل شرورة`,
-    type: "Store",
-    image: st.logo || ""
+    image: st.logo || marketConfig.platformLogo,
+    type: "Store"
   });
 
   renderSingleStoreCategories(st);
@@ -646,7 +715,6 @@ function renderSingleStoreProducts(st) {
   const grid = document.getElementById("stViewProductsGrid");
   grid.innerHTML = "";
 
-  // إذا كان المتجر تحت الصيانة، نعرض رسالة صيانة أنيقة
   if (isStoreUnderMaintenance(st)) {
     grid.innerHTML = `
       <div class="loading-box glass-panel">
@@ -657,34 +725,36 @@ function renderSingleStoreProducts(st) {
     return;
   }
 
-  const q = searchQueryText.trim().toLowerCase();
   const storeProds = allProducts.filter(p => {
     if (p.storeId !== st.id) return false;
-    const matchCat = activeStoreInternalCat === "all" || p.category === activeStoreInternalCat;
-    const matchSearch = !q || (p.name || "").toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q);
-    return matchCat && matchSearch;
+    return activeStoreInternalCat === "all" || p.category === activeStoreInternalCat;
   });
 
   if (storeProds.length === 0) {
     grid.innerHTML = `
       <div class="loading-box glass-panel">
         <i class="ri-shopping-bag-3-line"></i>
-        <span>لا توجد منتجات مضافة في هذا القسم حالياً</span>
+        <span>لا توجد منتجات في هذا القسم حالياً</span>
       </div>
     `;
     return;
   }
 
-  storeProds.forEach(prod => {
-    grid.appendChild(createProductCardElement(prod, false));
-  });
+  storeProds.forEach(prod => grid.appendChild(createProductCardElement(prod, false)));
 }
 
-// مشاركة رابط المتجر وتقييم المتجر بالنجوم
-document.getElementById("shareStoreBtn").addEventListener("click", () => {
+// مشاركة رابط المتجر وتقييم المتجر
+document.getElementById("shareStoreBtn").addEventListener("click", async () => {
   if (!activeStoreId) return;
+  const st = allStores.find(s => s.id === activeStoreId);
   const url = `${window.location.origin}${window.location.pathname}?store=${activeStoreId}`;
-  navigator.clipboard.writeText(url).then(() => showToast("تم نسخ رابط المحل! شاركه مع من تحب"));
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: st ? st.name : "متجر نفال", text: st ? st.description : "", url });
+      return;
+    } catch {}
+  }
+  navigator.clipboard.writeText(url).then(() => showToast("تم نسخ رابط المحل!"));
 });
 
 document.getElementById("rateStoreBtn").addEventListener("click", () => {
@@ -725,27 +795,18 @@ document.getElementById("submitRatingBtn").addEventListener("click", async () =>
   ratedList.push(activeStoreId);
   localStorage.setItem("nafal_rated_stores", JSON.stringify(ratedList));
   document.getElementById("ratingModal").classList.add("hidden");
-  showToast("شكراً لك! تم تسجيل تقييمك للمحل بنجاح ★");
+  showToast("شكراً لك! تم تسجيل تقييمك للمحل ★");
 });
 
-// 8. صفحة المنتج المستقلة برابطها الخاص (Single Product Page View - SEO Ready)
+// 9. صفحة المنتج المستقلة (Single Product Page View)
 function openProductPage(productId, pushHistory = true) {
   activeProductId = productId;
   activeProductQty = 1;
 
-  document.getElementById("marketplaceView").classList.add("hidden");
-  document.getElementById("singleStoreView").classList.add("hidden");
-  document.getElementById("singleProductPageView").classList.remove("hidden");
-
-  if (pushHistory) {
-    window.history.pushState({}, "", `?product=${productId}`);
-  }
+  switchSpaView("product", pushHistory ? `?product=${productId}` : null);
 
   const prod = allProducts.find(p => p.id === productId);
-  if (prod) {
-    populateProductPageUI(prod);
-  }
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (prod) populateProductPageUI(prod);
 }
 
 function populateProductPageUI(prod) {
@@ -780,7 +841,6 @@ function populateProductPageUI(prod) {
     stockEl.innerHTML = `<i class="ri-checkbox-circle-fill"></i> متوفر حالياً (${prod.stock} في المخزون)`;
   }
 
-  // معرض الصور (حتى 4 صور)
   const mainImg = document.getElementById("prodPageMainImg");
   const thumbsRow = document.getElementById("prodPageThumbnails");
   mainImg.src = images[0];
@@ -803,7 +863,6 @@ function populateProductPageUI(prod) {
     thumbsRow.classList.add("hidden");
   }
 
-  // المواصفات
   const specsGrid = document.getElementById("prodPageSpecsGrid");
   specsGrid.innerHTML = "";
   const specs = [
@@ -827,12 +886,12 @@ function populateProductPageUI(prod) {
 
   updateProductPageQtyUI(prod);
 
-  // تحديث بيانات محركات البحث (Google Product Rich Snippet)
-  updateSeoMeta({
-    title: `${prod.name} — ${storeName} | سوق نفال شرورة`,
+  // تحديث صورة المشاركة وأيقونة البحث لصورة هذا المنتج
+  updateSeoAndShareMeta({
+    title: `${prod.name} — ${storeName}`,
     description: prod.description || `اطلب ${prod.name} من ${storeName} في شرورة بسعر ${prod.price} ريال`,
-    type: "Product",
     image: images[0],
+    type: "Product",
     price: prod.price,
     storeName
   });
@@ -879,14 +938,6 @@ document.getElementById("prodPageAddToCartBtn").addEventListener("click", () => 
   addItemToStoreCart(prod, activeProductQty);
 });
 
-document.getElementById("backFromProductBtn").addEventListener("click", () => {
-  if (activeStoreId) {
-    openSingleStore(activeStoreId, true);
-  } else {
-    showMarketplaceHome(true);
-  }
-});
-
 document.getElementById("goToProductStoreBtn").addEventListener("click", () => {
   const prod = allProducts.find(p => p.id === activeProductId);
   if (prod && prod.storeId) openSingleStore(prod.storeId, true);
@@ -897,24 +948,54 @@ document.getElementById("prodPageStoreBanner").addEventListener("click", () => {
   if (prod && prod.storeId) openSingleStore(prod.storeId, true);
 });
 
-document.getElementById("shareProductUrlBtn").addEventListener("click", () => {
+document.getElementById("shareProductUrlBtn").addEventListener("click", async () => {
   if (!activeProductId) return;
+  const prod = allProducts.find(p => p.id === activeProductId);
   const url = `${window.location.origin}${window.location.pathname}?product=${activeProductId}`;
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: prod ? prod.name : "منتج في سوق نفال", text: prod ? prod.description : "", url });
+      return;
+    } catch {}
+  }
   navigator.clipboard.writeText(url).then(() => showToast("تم نسخ رابط المنتج المباشر!"));
 });
 
 // ============================================================================
-// 9. نظام "عرباتي" (السلات المتعددة لكل محل على حدة)
+// 10. صفحة "سلتي وطلباتي" المدمجة (السلات المتعددة + الفواتير بدون هاشتاج)
 // ============================================================================
+const hubTabCartsBtn = document.getElementById("hubTabCartsBtn");
+const hubTabInvoicesBtn = document.getElementById("hubTabInvoicesBtn");
+const hubCartsSection = document.getElementById("hubCartsSection");
+const hubInvoicesSection = document.getElementById("hubInvoicesSection");
+
+function activateHubSubTab(tabName) {
+  if (tabName === "invoices") {
+    hubTabCartsBtn.classList.remove("active");
+    hubTabInvoicesBtn.classList.add("active");
+    hubCartsSection.classList.add("hidden");
+    hubInvoicesSection.classList.remove("hidden");
+    listenToCustomerInvoices();
+  } else {
+    hubTabInvoicesBtn.classList.remove("active");
+    hubTabCartsBtn.classList.add("active");
+    hubInvoicesSection.classList.add("hidden");
+    hubCartsSection.classList.remove("hidden");
+    renderCartsListView();
+  }
+}
+
+hubTabCartsBtn.addEventListener("click", () => activateHubSubTab("carts"));
+hubTabInvoicesBtn.addEventListener("click", () => activateHubSubTab("invoices"));
+
 function saveMultiCarts() {
-  // تنظيف أي سلة فارغة
   Object.keys(multiCarts).forEach(stId => {
     if (!multiCarts[stId] || !Array.isArray(multiCarts[stId].items) || multiCarts[stId].items.length === 0) {
       delete multiCarts[stId];
     }
   });
   localStorage.setItem("nafal_multi_carts", JSON.stringify(multiCarts));
-  updateMultiCartsDockUI();
+  updateMultiCartsBadges();
 }
 
 function addItemToStoreCart(product, qtyToAdd = 1) {
@@ -952,43 +1033,29 @@ function addItemToStoreCart(product, qtyToAdd = 1) {
   saveMultiCarts();
   const parentStore = allStores.find(s => s.id === stId);
   const sName = parentStore ? parentStore.name : (product.storeName || "المحل");
-  showToast(`تمت الإضافة لسلة "${sName}" في عرباتك`);
+  showToast(`تمت الإضافة لسلة "${sName}"`);
 }
 
-function updateMultiCartsDockUI() {
+function updateMultiCartsBadges() {
   const storeIds = Object.keys(multiCarts);
   let totalItems = 0;
   storeIds.forEach(id => {
     totalItems += (multiCarts[id].items || []).reduce((s, i) => s + i.qty, 0);
   });
 
-  document.getElementById("totalCartsItemsBadge").textContent = totalItems;
-  document.getElementById("totalCartsStoresCount").textContent = storeIds.length;
+  const dockBadge = document.getElementById("dockTotalBadge");
+  dockBadge.textContent = totalItems;
+  dockBadge.classList.toggle("hidden", totalItems === 0);
+
+  document.getElementById("hubCartsCountBadge").textContent = storeIds.length;
 }
-
-// فتح نافذة "عرباتي"
-document.getElementById("dockCartsBtn").addEventListener("click", () => {
-  openMultiCartsModal();
-});
-
-document.getElementById("closeCartsModalBtn").addEventListener("click", () => {
-  document.getElementById("multiCartsModal").classList.add("hidden");
-});
 
 document.getElementById("backToCartsListBtn").addEventListener("click", () => {
   activeCheckoutStoreId = null;
   renderCartsListView();
 });
 
-function openMultiCartsModal() {
-  document.getElementById("multiCartsModal").classList.remove("hidden");
-  const storeIds = Object.keys(multiCarts);
-  // إذا كان العميل داخل محل معين وله سلة، أو لا توجد إلا سلة محل واحد، نعرض قائمة العربات بوضوح
-  renderCartsListView();
-}
-
 function renderCartsListView() {
-  document.getElementById("cartsModalTitle").textContent = "عرباتي (سلات المحلات)";
   document.getElementById("cartsListView").classList.remove("hidden");
   document.getElementById("activeStoreCartCheckoutView").classList.add("hidden");
 
@@ -998,9 +1065,9 @@ function renderCartsListView() {
   const storeIds = Object.keys(multiCarts);
   if (storeIds.length === 0) {
     container.innerHTML = `
-      <div class="loading-box glass-inset">
+      <div class="loading-box glass-panel">
         <i class="ri-shopping-basket-2-line"></i>
-        <span>عرباتك فاضية حالياً يا غالي.. تصفح المحلات وأضف اللي يعجبك!</span>
+        <span>ما عندك أي سلة مشتريات حالياً.. تصفح المحلات وأضف اللي يعجبك!</span>
       </div>
     `;
     return;
@@ -1028,23 +1095,17 @@ function renderCartsListView() {
         </div>
       </div>
 
-      <div class="sc-left">
-        <span class="sc-open-btn">
-          <span>افتح السلة</span>
-          <i class="ri-arrow-left-s-line"></i>
-        </span>
-      </div>
+      <span class="sc-open-btn">
+        <span>إتمام الطلب</span>
+        <i class="ri-arrow-left-s-line"></i>
+      </span>
     `;
 
-    card.addEventListener("click", () => {
-      openStoreCartCheckout(stId);
-    });
-
+    card.addEventListener("click", () => openStoreCartCheckout(stId));
     container.appendChild(card);
   });
 }
 
-// فتح سلة محل معين لإتمام الطلب منه لوحده
 function openStoreCartCheckout(storeId) {
   activeCheckoutStoreId = storeId;
   const cartObj = multiCarts[storeId];
@@ -1066,16 +1127,14 @@ function openStoreCartCheckout(storeId) {
     workMode: "24h"
   };
 
-  document.getElementById("cartsModalTitle").textContent = `سلة: ${store.name}`;
   document.getElementById("cartsListView").classList.add("hidden");
   document.getElementById("activeStoreCartCheckoutView").classList.remove("hidden");
 
-  // هيدر المحل داخل السلة
   document.getElementById("checkoutStoreHeader").innerHTML = `
     <div style="display:flex; align-items:center; gap:10px;">
       <i class="ri-store-3-fill" style="color:var(--caramel); font-size:1.4rem;"></i>
       <div>
-        <strong style="font-size:1rem;">${store.name}</strong>
+        <strong style="font-size:1.04rem;">سلة: ${store.name}</strong>
         <div class="hint-text">الطلب بيروح مباشرة لواتساب صاحب هذا المحل</div>
       </div>
     </div>
@@ -1090,7 +1149,6 @@ function openStoreCartCheckout(storeId) {
     renderCartsListView();
   });
 
-  // عرض عناصر السلة
   const itemsListEl = document.getElementById("checkoutCartItemsList");
   itemsListEl.innerHTML = "";
 
@@ -1136,14 +1194,12 @@ function openStoreCartCheckout(storeId) {
     itemsListEl.appendChild(row);
   });
 
-  // حساب الإجمالي وعروض التوصيل الخاصة بهذا المحل
   const totals = calculateStoreCartTotals(store, cartObj.items);
   document.getElementById("checkoutSmartHint").innerHTML = `<i class="ri-truck-line"></i><span>${totals.hint}</span>`;
   document.getElementById("chkSubtotal").textContent = totals.subtotal;
   document.getElementById("chkDelivery").textContent = totals.deliveryFee;
   document.getElementById("chkTotal").textContent = totals.total;
 
-  // فحص حالة الدوام والحد الأدنى للطلب لمنع الإحالة للواتساب إذا كان المحل مقفل
   const workState = checkStoreWorkState(store);
   const minOrder = Number(store.minOrderAmount || 0);
   const blockerEl = document.getElementById("checkoutBlockerNotice");
@@ -1202,7 +1258,7 @@ function calculateStoreCartTotals(store, items) {
   return { subtotal, deliveryFee, total: subtotal + deliveryFee, hint };
 }
 
-// 10. تحديد الموقع الجغرافي (GPS) للزبون
+// 11. تحديد الموقع الجغرافي (GPS) للزبون
 document.getElementById("getGpsBtn").addEventListener("click", () => {
   const statusText = document.getElementById("gpsStatusText");
   const gpsInput = document.getElementById("custGpsUrl");
@@ -1228,7 +1284,7 @@ document.getElementById("getGpsBtn").addEventListener("click", () => {
   );
 });
 
-// 11. توليد رقم فاتورة مستحيل التكرار (رمز التاجر + السنة والشهر + كود فريد لا نهائي)
+// 12. توليد رقم الفاتورة بدون هاشتاج وإرسال الطلب لواتساب المحل
 function generateUniqueStoreInvoiceNumber(storePrefix = "NF") {
   const cleanPrefix = (storePrefix || "NF").replace(/[^A-Za-z0-9]/g, "").toUpperCase() || "NF";
   const now = new Date();
@@ -1239,7 +1295,6 @@ function generateUniqueStoreInvoiceNumber(storePrefix = "NF") {
   return `${cleanPrefix}-${yy}${mm}-${timePart}${randPart}`;
 }
 
-// إرسال الطلب وحقن الفاتورة في واتساب التاجر المعني
 document.getElementById("checkoutForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!activeCheckoutStoreId || !multiCarts[activeCheckoutStoreId]) return;
@@ -1247,7 +1302,6 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
   const store = allStores.find(s => s.id === activeCheckoutStoreId);
   if (!store) return;
 
-  // تحقق أخير من أن المحل مفتوح
   const workState = checkStoreWorkState(store);
   if (!workState.canOrder) {
     showToast(workState.reasonMsg);
@@ -1280,7 +1334,6 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
   try {
     await addDoc(collection(db, "nafal_orders"), orderData);
 
-    // خصم الكميات من المخزون
     for (const item of cartItems) {
       const prod = allProducts.find(p => p.id === item.id);
       if (prod) {
@@ -1289,7 +1342,6 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
       }
     }
 
-    // حفظ رقم الفاتورة في جهاز الزبون لمتابعتها
     if (!savedInvoices.includes(invoiceNumber)) {
       savedInvoices.unshift(invoiceNumber);
       localStorage.setItem("nafal_my_invoices", JSON.stringify(savedInvoices));
@@ -1298,9 +1350,10 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
     const storeWa = (store.whatsappNumber || "").replace(/[^0-9]/g, "");
     const itemsLines = orderData.items.map(i => `• ${i.name} (الكمية: ${i.qty})`).join("\n");
 
+    // نص الفاتورة نظيف بدون علامة الهاشتاج (#) نهائياً
     const waText = encodeURIComponent(
       `*طلب جديد عبر سوق نفال — ${store.name}*\n` +
-      `*رقم الفاتورة:* #${invoiceNumber}\n` +
+      `*رقم الفاتورة:* ${invoiceNumber}\n` +
       `*الزبون:* ${orderData.customerName}\n` +
       `*الجوال:* ${orderData.customerPhone}\n` +
       `*الموقع (GPS):* ${orderData.gpsLocation}\n` +
@@ -1312,16 +1365,11 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
       `*الإجمالي النهائي:* ${orderData.totalAmount} ريال`
     );
 
-    // حذف سلة هذا المحل فقط مع الإبقاء على سلات المحلات الأخرى
     delete multiCarts[activeCheckoutStoreId];
     saveMultiCarts();
 
     document.getElementById("checkoutForm").reset();
-    document.getElementById("multiCartsModal").classList.add("hidden");
-
-    // فتح نافذة "فواتيري" للزبون ليتابع طلبه مباشرة
-    document.getElementById("ordersModal").classList.remove("hidden");
-    listenToCustomerInvoices();
+    activateHubSubTab("invoices");
 
     window.open(`https://wa.me/${storeWa}?text=${waText}`, "_blank");
   } catch (err) {
@@ -1332,17 +1380,21 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
   }
 });
 
-// ============================================================================
-// 12. نافذة "فواتيري" ومتابعة حالة الطلب ورقم المندوب
-// ============================================================================
+// 13. متابعة الفواتير وحالة المندوب داخل صفحة "سلتي وطلباتي" (بدون هاشتاج)
 let unsubCustomerOrders = null;
 
 function listenToCustomerInvoices(searchCode = "") {
   const container = document.getElementById("customerOrdersList");
-  const targetInvoices = searchCode ? [searchCode.toUpperCase()] : savedInvoices;
+  const cleanSearch = searchCode.replace("#", "").trim().toUpperCase();
+  const targetInvoices = cleanSearch ? [cleanSearch] : savedInvoices;
 
   if (targetInvoices.length === 0) {
-    container.innerHTML = `<p class="hint-text">ما عندك فواتير محفوظة حالياً. تقدر تبحث برقم فاتورتك فوق.</p>`;
+    container.innerHTML = `
+      <div class="loading-box glass-panel">
+        <i class="ri-file-list-3-line"></i>
+        <span>ما عندك فواتير سابقة محفوظة حالياً. تقدر تبحث برقم فاتورتك فوق.</span>
+      </div>
+    `;
     return;
   }
 
@@ -1362,7 +1414,7 @@ function listenToCustomerInvoices(searchCode = "") {
     matched.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
     if (matched.length === 0) {
-      container.innerHTML = `<p class="hint-text">ما لقينا فاتورة بهذا الرقم.</p>`;
+      container.innerHTML = `<div class="loading-box glass-panel"><span>ما لقينا فاتورة بهذا الرقم.</span></div>`;
       return;
     }
 
@@ -1389,11 +1441,10 @@ function listenToCustomerInvoices(searchCode = "") {
             `).join("")}
           </div>`;
 
-      // إظهار اسم ورقم المندوب للزبون فور استلام المندوب للطلب
       const courierBoxHtml = order.courierName
         ? `<div class="courier-call-box">
             <div><i class="ri-e-bike-2-fill"></i> طلبك مع المندوب: <strong>${order.courierName}</strong></div>
-            ${order.courierPhone ? `<a href="tel:${order.courierPhone}" class="btn-glass-sm">اتصال: ${order.courierPhone}</a>` : ""}
+            ${order.courierPhone ? `<a href="tel:${order.courierPhone}" class="btn-glass-sm">اتصال بالمندوب: ${order.courierPhone}</a>` : ""}
           </div>`
         : "";
 
@@ -1406,7 +1457,7 @@ function listenToCustomerInvoices(searchCode = "") {
           <div class="cust-inv-right">
             <div class="cust-arrow"><i class="ri-arrow-down-s-line"></i></div>
             <div>
-              <strong style="font-size:0.98rem; color:var(--espresso);">فاتورة #${order.invoiceNumber} — ${order.storeName || "متجر نفال"}</strong>
+              <strong style="font-size:0.98rem; color:var(--espresso);">فاتورة رقم: ${order.invoiceNumber} — ${order.storeName || "متجر نفال"}</strong>
               <div class="hint-text">الإجمالي: ${order.totalAmount} ريال — ${new Date(order.createdAt || Date.now()).toLocaleDateString("ar-SA")}</div>
             </div>
           </div>
@@ -1416,7 +1467,7 @@ function listenToCustomerInvoices(searchCode = "") {
         <div class="cust-inv-body">
           ${stepsHtml}
           ${courierBoxHtml}
-          <div class="glass-inset" style="padding:12px; font-size:0.86rem; line-height:1.7;">
+          <div class="glass-inset" style="padding:12px; font-size:0.88rem; line-height:1.7;">
             <strong>المنتجات المطلوبة من ${order.storeName || "المحل"}:</strong><br>
             ${itemsText}
             <div style="margin-top:6px; padding-top:6px; border-top:1px dashed rgba(30,19,13,0.12); font-weight:800;">
@@ -1435,28 +1486,19 @@ function listenToCustomerInvoices(searchCode = "") {
   });
 }
 
-document.getElementById("dockOrdersBtn").addEventListener("click", () => {
-  document.getElementById("ordersModal").classList.remove("hidden");
-  listenToCustomerInvoices();
-});
-
-document.getElementById("closeOrdersBtn").addEventListener("click", () => {
-  document.getElementById("ordersModal").classList.add("hidden");
-});
-
 document.getElementById("searchInvoiceBtn").addEventListener("click", () => {
   const val = document.getElementById("searchInvoiceInput").value.trim();
   listenToCustomerInvoices(val);
 });
 
-// إغلاق النوافذ عند الضغط في الخلفية
-document.querySelectorAll(".modal-overlay").forEach(ov => {
-  ov.addEventListener("click", (e) => {
-    if (e.target === ov) ov.classList.add("hidden");
-  });
+// إغلاق نافذة التقييم عند الضغط بالخارج
+document.getElementById("ratingModal").addEventListener("click", (e) => {
+  if (e.target.id === "ratingModal") {
+    document.getElementById("ratingModal").classList.add("hidden");
+  }
 });
 
-// تشغيل المنصة وفحص الروابط العميقة
+// تشغيل المنصة
 initRealtimeListeners();
-updateMultiCartsDockUI();
+updateMultiCartsBadges();
 handleUrlRouting();
